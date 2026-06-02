@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="900" viewBox="0 0 1280 900">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#374151"/>
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="40" y="42" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#111827">Datenmodell – Workforce Planning</text>
+  <text x="40" y="66" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#4B5563">users · shift_plans · shift_entries · vacation_requests · vacation_request_days</text>
+  <g class="entity"><rect x="516" y="100" width="248" height="128" rx="10" ry="10" fill="#DBEAFE" stroke="#1D4ED8" stroke-width="2.2"/><rect x="516" y="100" width="248" height="34" rx="10" ry="10" fill="#1D4ED8" opacity="0.12"/><line x1="516" y1="134" x2="764" y2="134" stroke="#1D4ED8" stroke-width="1.5"/><text x="530" y="123" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#111827">users</text>
+<text x="530" y="152" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">id  PK</text>
+<text x="530" y="172" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">username</text>
+<text x="530" y="192" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">contract_type</text>
+<text x="530" y="212" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">admin</text>
+</g>
+<g class="entity"><rect x="80" y="300" width="248" height="188" rx="10" ry="10" fill="#ECFDF5" stroke="#047857" stroke-width="2.2"/><rect x="80" y="300" width="248" height="34" rx="10" ry="10" fill="#047857" opacity="0.12"/><line x1="80" y1="334" x2="328" y2="334" stroke="#047857" stroke-width="1.5"/><text x="94" y="323" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#111827">shift_plans</text>
+<text x="94" y="352" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">id  PK</text>
+<text x="94" y="372" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">user_id  FK</text>
+<text x="94" y="392" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">period_start / period_end</text>
+<text x="94" y="412" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">status</text>
+<text x="94" y="432" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">submitted_at / reviewed_at</text>
+<text x="94" y="452" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">reviewed_by_id</text>
+<text x="94" y="472" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">deleted_at</text>
+</g>
+<g class="entity"><rect x="80" y="560" width="248" height="208" rx="10" ry="10" fill="#ECFDF5" stroke="#047857" stroke-width="2.2"/><rect x="80" y="560" width="248" height="34" rx="10" ry="10" fill="#047857" opacity="0.12"/><line x1="80" y1="594" x2="328" y2="594" stroke="#047857" stroke-width="1.5"/><text x="94" y="583" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#111827">shift_entries</text>
+<text x="94" y="612" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">id  PK</text>
+<text x="94" y="632" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">plan_id  FK</text>
+<text x="94" y="652" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">entry_date</text>
+<text x="94" y="672" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">start_time / end_time</text>
+<text x="94" y="692" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">shift_type</text>
+<text x="94" y="712" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">minutes</text>
+<text x="94" y="732" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">review_status</text>
+<text x="94" y="752" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">reviewed_by_id  FK</text>
+</g>
+<g class="entity"><rect x="952" y="300" width="248" height="208" rx="10" ry="10" fill="#FEF3C7" stroke="#B45309" stroke-width="2.2"/><rect x="952" y="300" width="248" height="34" rx="10" ry="10" fill="#B45309" opacity="0.12"/><line x1="952" y1="334" x2="1200" y2="334" stroke="#B45309" stroke-width="1.5"/><text x="966" y="323" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#111827">vacation_requests</text>
+<text x="966" y="352" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">id  PK</text>
+<text x="966" y="372" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">employee_id  FK</text>
+<text x="966" y="392" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">year</text>
+<text x="966" y="412" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">status</text>
+<text x="966" y="432" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">submitted_at / reviewed_at</text>
+<text x="966" y="452" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">reviewed_by_id  FK</text>
+<text x="966" y="472" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">rejection_reason</text>
+<text x="966" y="492" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">deleted_at</text>
+</g>
+<g class="entity"><rect x="952" y="600" width="248" height="168" rx="10" ry="10" fill="#FEF3C7" stroke="#B45309" stroke-width="2.2"/><rect x="952" y="600" width="248" height="34" rx="10" ry="10" fill="#B45309" opacity="0.12"/><line x1="952" y1="634" x2="1200" y2="634" stroke="#B45309" stroke-width="1.5"/><text x="966" y="623" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#111827">vacation_request_days</text>
+<text x="966" y="652" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">id  PK</text>
+<text x="966" y="672" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">vacation_request_id  FK</text>
+<text x="966" y="692" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">request_date</text>
+<text x="966" y="712" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">review_status</text>
+<text x="966" y="732" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">reviewed_by_id  FK</text>
+<text x="966" y="752" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111827">reviewed_at</text>
+</g>
+<line x1="640" y1="228" x2="204" y2="300" stroke="#374151" stroke-width="1.8" marker-end="url(#arrow)"/><text x="428" y="260" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#4B5563">1 : n  owns</text>
+<line x1="204" y1="488" x2="204" y2="560" stroke="#374151" stroke-width="1.8" marker-end="url(#arrow)"/><text x="210" y="520" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#4B5563">1 : n  contains</text>
+<line x1="640" y1="228" x2="1076" y2="300" stroke="#374151" stroke-width="1.8" marker-end="url(#arrow)"/><text x="864" y="260" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#4B5563">1 : n  submits</text>
+<line x1="1076" y1="508" x2="1076" y2="600" stroke="#374151" stroke-width="1.8" marker-end="url(#arrow)"/><text x="1082" y="550" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#4B5563">1 : n  contains</text>
+<path d="M640,228 L422,228 L422,664 L204,664" fill="none" stroke="#374151" stroke-width="1.8" stroke-dasharray="7,5" marker-end="url(#arrow)"/><text x="428" y="440" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#4B5563">reviews</text>
+<path d="M640,228 L858,228 L858,404 L1076,404" fill="none" stroke="#374151" stroke-width="1.8" stroke-dasharray="7,5" marker-end="url(#arrow)"/><text x="864" y="310" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#4B5563">reviews</text>
+<path d="M640,228 L858,228 L858,600 L1076,600" fill="none" stroke="#374151" stroke-width="1.8" stroke-dasharray="7,5" marker-end="url(#arrow)"/><text x="864" y="408" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#4B5563">reviews</text>
+  <text x="40" y="876" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#6B7280">
+    Solid lines: Flyway FK enforced · Dashed lines: logical FK (Java Long IDs)
+  </text>
+</svg>

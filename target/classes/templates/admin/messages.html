@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(content=~{::main})}">
+<head>
+	<title>Messages</title>
+</head>
+<body>
+	<main th:fragment="main" class="messages-page">
+		<!-- Logged-in user id is embedded for the messaging JS only -->
+		<input type="hidden" id="messaging-me-id" th:value="${#authentication.principal.employee.id}" value="0"/>
+		<div id="messaging-app" class="messaging-app" aria-label="Messaging">
+			<aside class="messaging-sidebar" aria-label="Conversations">
+				<div class="messaging-sidebar-header">
+					<h2 class="messaging-sidebar-title">Conversations</h2>
+					<div class="messaging-sidebar-search" aria-label="Search contacts">
+						<input id="messaging-search" class="messaging-search-input" type="search" placeholder="Search employees…" autocomplete="off" />
+					</div>
+				</div>
+				<nav id="messaging-convo-list" class="messaging-convo-list" aria-label="Conversation list">
+					<button type="button" class="messaging-convo-item is-active" aria-current="true">
+						<span class="messaging-avatar">HR</span>
+						<span class="messaging-convo-meta">
+							<span class="messaging-convo-top">
+								<span class="messaging-convo-name">HR Team</span>
+								<span class="messaging-convo-time">09:12</span>
+							</span>
+							<span class="messaging-convo-preview">Your contract update was approved.</span>
+						</span>
+					</button>
+					<button type="button" class="messaging-convo-item">
+						<span class="messaging-avatar">AD</span>
+						<span class="messaging-convo-meta">
+							<span class="messaging-convo-top">
+								<span class="messaging-convo-name">Admin</span>
+								<span class="messaging-convo-time">Yesterday</span>
+							</span>
+							<span class="messaging-convo-preview">Please review changes requested shifts.</span>
+						</span>
+					</button>
+					<button type="button" class="messaging-convo-item">
+						<span class="messaging-avatar">IT</span>
+						<span class="messaging-convo-meta">
+							<span class="messaging-convo-top">
+								<span class="messaging-convo-name">IT Support</span>
+								<span class="messaging-convo-time">Mon</span>
+							</span>
+							<span class="messaging-convo-preview">Ticket #2381 has been resolved.</span>
+						</span>
+					</button>
+				</nav>
+			</aside>
+
+			<section class="messaging-chat" aria-label="Active chat">
+				<header class="messaging-chat-header">
+					<div class="messaging-chat-title-wrap">
+						<div class="messaging-chat-title">HR Team</div>
+						<div class="messaging-chat-subtitle">Typically replies within 1 business day</div>
+					</div>
+					<div class="messaging-chat-actions" aria-label="Chat actions">
+						<button type="button" class="messaging-icon-btn" aria-label="Search messages">
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+						</button>
+					</div>
+				</header>
+
+				<div id="messaging-chat-body" class="messaging-chat-body" aria-label="Messages">
+					<div class="messaging-day-sep"><span>Today</span></div>
+
+					<div class="messaging-msg-row is-incoming">
+						<div class="messaging-bubble">
+							<div class="messaging-bubble-text">Hi! We’ve updated your contract details. Let us know if anything looks incorrect.</div>
+							<div class="messaging-bubble-meta">09:05</div>
+						</div>
+					</div>
+
+					<div class="messaging-msg-row is-outgoing">
+						<div class="messaging-bubble">
+							<div class="messaging-bubble-text">Thanks! Quick question: does this affect my weekly hours in shift planning?</div>
+							<div class="messaging-bubble-meta">09:07</div>
+						</div>
+					</div>
+
+					<div class="messaging-msg-row is-incoming">
+						<div class="messaging-bubble">
+							<div class="messaging-bubble-text">Yes — the weekly limit will be enforced automatically. If you need an exception, contact your manager.</div>
+							<div class="messaging-bubble-meta">09:12</div>
+						</div>
+					</div>
+				</div>
+
+				<footer class="messaging-composer" aria-label="Message composer">
+					<button type="button" class="messaging-icon-btn" aria-label="Attach file">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+					</button>
+					<input id="messaging-input" class="messaging-input" type="text" placeholder="Write a message…" aria-label="Message input" />
+					<button id="messaging-send-btn" type="button" class="messaging-send-btn" aria-label="Send message">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+					</button>
+				</footer>
+			</section>
+		</div>
+
+		<script>
+			(function () {
+				var app = document.getElementById('messaging-app');
+				if (!app) return;
+
+				var apiBase = (window.location && window.location.pathname && window.location.pathname.indexOf('/admin') === 0)
+					? '/admin'
+					: '/dashboard';
+
+				var list = document.getElementById('messaging-convo-list');
+				var chatTitle = app.querySelector('.messaging-chat-title');
+				var chatSubtitle = app.querySelector('.messaging-chat-subtitle');
+				var chatBody = document.getElementById('messaging-chat-body');
+				var meIdEl = document.getElementById('messaging-me-id');
+				var msgInput = document.getElementById('messaging-input');
+				var sendBtn = document.getElementById('messaging-send-btn');
+
+				if (!list || !chatTitle || !chatSubtitle || !chatBody || !msgInput || !sendBtn || !meIdEl) return;
+
+				var activeContactId = null;
+				var meId = Number(meIdEl.value || 0) || 0;
+				var unreadByContact = {};
+				var searchEl = document.getElementById('messaging-search');
+				var debounceTimer = null;
+				var isSearchMode = false;
+				var pendingContactId = null;
+
+				(function initFromUrl() {
+					try {
+						var sp = new URLSearchParams(window.location.search || '');
+						var cid = sp.get('contactId');
+						if (cid) pendingContactId = String(cid);
+					} catch (e) {}
+				})();
+
+				function initials(name) {
+					var s = String(name || '').trim();
+					if (!s) return '??';
+					var parts = s.split(/\s+/).filter(Boolean);
+					if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+					return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+				}
+
+				function esc(s) {
+					return String(s || '')
+						.replace(/&/g, '&amp;')
+						.replace(/</g, '&lt;')
+						.replace(/>/g, '&gt;')
+						.replace(/"/g, '&quot;')
+						.replace(/'/g, '&#039;');
+				}
+
+				function apiHeaders(json) {
+					var headers = { 'Accept': 'application/json' };
+					if (json) headers['Content-Type'] = 'application/json';
+					var csrfTokenEl = document.querySelector('meta[name="_csrf"]');
+					var csrfHeaderEl = document.querySelector('meta[name="_csrf_header"]');
+					if (csrfTokenEl && csrfHeaderEl) {
+						headers[csrfHeaderEl.getAttribute('content')] = csrfTokenEl.getAttribute('content');
+					}
+					return headers;
+				}
+
+				function fmtTime(iso) {
+					try {
+						var d = new Date(iso);
+						return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+					} catch (e) {
+						return '';
+					}
+				}
+
+				function setEmptyConversationState(label) {
+					chatTitle.textContent = label || 'New conversation';
+					chatSubtitle.textContent = 'No message history yet';
+					chatBody.innerHTML = '<div class="messaging-day-sep"><span>Start a conversation</span></div>';
+				}
+
+				function renderSearchResults(results) {
+					list.innerHTML = '';
+					isSearchMode = true;
+
+					var items = Array.isArray(results) ? results : [];
+					items = items.filter(function (r) { return r && r.id && Number(r.id) !== meId; });
+
+					if (items.length === 0) {
+						var empty = document.createElement('div');
+						empty.className = 'messaging-convo-preview';
+						empty.style.padding = '10px 10px';
+						empty.textContent = 'No results.';
+						list.appendChild(empty);
+						return;
+					}
+
+					items.forEach(function (r) {
+						var btn = document.createElement('button');
+						btn.type = 'button';
+						btn.className = 'messaging-convo-item' + (String(activeContactId || '') === String(r.id) ? ' is-active' : '');
+						btn.dataset.contactId = String(r.id);
+						btn.dataset.contactName = String(r.name || '');
+
+						var avatar;
+						if (r.avatarUrl) {
+							avatar = document.createElement('img');
+							avatar.className = 'messaging-avatar messaging-avatar-img';
+							avatar.alt = '';
+							avatar.src = String(r.avatarUrl);
+						} else {
+							avatar = document.createElement('span');
+							avatar.className = 'messaging-avatar';
+							avatar.textContent = initials(r.name);
+						}
+
+						var meta = document.createElement('span');
+						meta.className = 'messaging-convo-meta';
+
+						var top = document.createElement('span');
+						top.className = 'messaging-convo-top';
+
+						var name = document.createElement('span');
+						name.className = 'messaging-convo-name';
+						name.textContent = r.name || 'Unknown';
+
+						top.appendChild(name);
+
+						var preview = document.createElement('span');
+						preview.className = 'messaging-convo-preview';
+						preview.textContent = 'Start chat';
+
+						meta.appendChild(top);
+						meta.appendChild(preview);
+
+						btn.appendChild(avatar);
+						btn.appendChild(meta);
+
+						btn.addEventListener('click', function () {
+							activeContactId = btn.dataset.contactId || null;
+							chatTitle.textContent = btn.dataset.contactName || 'Conversation';
+							chatSubtitle.textContent = 'Connected';
+							setEmptyConversationState(btn.dataset.contactName || 'Conversation');
+
+							list.querySelectorAll('.messaging-convo-item').forEach(function (el) {
+								el.classList.remove('is-active');
+								el.removeAttribute('aria-current');
+							});
+							btn.classList.add('is-active');
+							btn.setAttribute('aria-current', 'true');
+						});
+
+						list.appendChild(btn);
+					});
+				}
+
+				function searchContacts(q) {
+					var query = String(q || '').trim();
+					if (!query) {
+						isSearchMode = false;
+						loadConversations();
+						return;
+					}
+					fetch(apiBase + '/api/contacts/search?q=' + encodeURIComponent(query), {
+						headers: { 'Accept': 'application/json' }
+					})
+						.then(function (res) { return res.ok ? res.json() : []; })
+						.then(function (data) { renderSearchResults(data); })
+						.catch(function () { renderSearchResults([]); });
+				}
+
+				function renderHistory(messages) {
+					chatBody.innerHTML = '';
+					if (!messages || messages.length === 0) {
+						chatBody.innerHTML = '<div class="messaging-day-sep"><span>No messages yet</span></div>';
+						return;
+					}
+					messages.forEach(function (m) {
+						var outgoing = meId && Number(m.senderId) === meId;
+						var row = document.createElement('div');
+						row.className = 'messaging-msg-row ' + (outgoing ? 'is-outgoing' : 'is-incoming');
+						var bubble = document.createElement('div');
+						bubble.className = 'messaging-bubble';
+						bubble.innerHTML =
+							'<div class="messaging-bubble-text">' + esc(m.content) + '</div>' +
+							'<div class="messaging-bubble-meta">' + esc(fmtTime(m.timestamp)) + '</div>';
+						row.appendChild(bubble);
+						chatBody.appendChild(row);
+					});
+					chatBody.scrollTop = chatBody.scrollHeight;
+				}
+
+				function markConversationRead(contactId) {
+					if (!contactId) return Promise.resolve();
+					return fetch(apiBase + '/api/messages/read/' + encodeURIComponent(contactId), {
+						method: 'POST',
+						headers: apiHeaders(false)
+					})
+						.then(function (res) {
+							if (!res.ok) throw new Error('mark read failed');
+							unreadByContact[String(contactId)] = 0;
+							updateUnreadBadges();
+							try {
+								window.dispatchEvent(new CustomEvent('messaging:read', { detail: { contactId: contactId } }));
+							} catch (e) { /* ignore */ }
+						})
+						.catch(function () { /* ignore */ });
+				}
+
+				function fetchAndRenderHistory(contactId) {
+					if (!contactId) return Promise.resolve();
+					return fetch(apiBase + '/api/messages/history/' + encodeURIComponent(contactId), {
+						headers: { 'Accept': 'application/json' }
+					})
+						.then(function (res) { return res.ok ? res.json() : []; })
+						.then(function (data) {
+							renderHistory(Array.isArray(data) ? data : []);
+						})
+						.catch(function () {
+							chatBody.innerHTML = '<div class="messaging-day-sep"><span>Failed to load</span></div>';
+						});
+				}
+
+				function loadHistory(contactId) {
+					if (!contactId) return;
+					markConversationRead(contactId);
+					fetchAndRenderHistory(contactId);
+				}
+
+				function appendLocalMessage(content) {
+					var row = document.createElement('div');
+					row.className = 'messaging-msg-row is-outgoing';
+					var bubble = document.createElement('div');
+					bubble.className = 'messaging-bubble';
+					bubble.innerHTML =
+						'<div class="messaging-bubble-text">' + esc(content) + '</div>' +
+						'<div class="messaging-bubble-meta">' + esc(fmtTime(new Date().toISOString())) + '</div>';
+					row.appendChild(bubble);
+					chatBody.appendChild(row);
+					chatBody.scrollTop = chatBody.scrollHeight;
+				}
+
+				function sendMessage() {
+					var content = String(msgInput.value || '').trim();
+					if (!content) return;
+					if (!activeContactId) {
+						chatSubtitle.textContent = 'Select a contact to start chatting';
+						return;
+					}
+
+					msgInput.value = '';
+					appendLocalMessage(content);
+
+					fetch(apiBase + '/api/messages/send', {
+						method: 'POST',
+						headers: apiHeaders(true),
+						body: JSON.stringify({
+							receiverId: Number(activeContactId),
+							senderId: meId || null,
+							content: content
+						})
+					}).then(function (res) {
+						if (!res.ok) throw new Error('send failed');
+						return res.json();
+					}).then(function () {
+						chatSubtitle.textContent = 'Connected';
+						// Refresh sidebar preview/timestamp quickly
+						loadConversations();
+					}).catch(function () {
+						chatSubtitle.textContent = 'Offline';
+					});
+				}
+
+				function renderConversationList(convos) {
+					list.innerHTML = '';
+
+					if (!convos || convos.length === 0) {
+						var empty = document.createElement('div');
+						empty.className = 'messaging-convo-preview';
+						empty.style.padding = '10px 10px';
+						empty.textContent = 'No conversations yet. Search for someone to start.';
+						list.appendChild(empty);
+						return;
+					}
+
+					convos.forEach(function (c) {
+						var btn = document.createElement('button');
+						btn.type = 'button';
+						btn.className = 'messaging-convo-item' + (String(activeContactId || '') === String(c.contactId || '') ? ' is-active' : '');
+						if (String(activeContactId || '') === String(c.contactId || '')) btn.setAttribute('aria-current', 'true');
+
+						btn.dataset.contactId = String(c.contactId || '');
+						btn.dataset.contactName = String(c.name || '');
+
+						var avatar;
+						if (c.avatarUrl) {
+							avatar = document.createElement('img');
+							avatar.className = 'messaging-avatar messaging-avatar-img';
+							avatar.alt = '';
+							avatar.src = String(c.avatarUrl);
+						} else {
+							avatar = document.createElement('span');
+							avatar.className = 'messaging-avatar';
+							avatar.textContent = initials(c.name);
+						}
+
+						var meta = document.createElement('span');
+						meta.className = 'messaging-convo-meta';
+
+						var top = document.createElement('span');
+						top.className = 'messaging-convo-top';
+
+						var name = document.createElement('span');
+						name.className = 'messaging-convo-name';
+						name.textContent = c.name || 'Unknown';
+
+						var right = document.createElement('span');
+						right.className = 'messaging-convo-right';
+
+						var time = document.createElement('span');
+						time.className = 'messaging-convo-time';
+						time.textContent = c.lastTimestamp ? fmtTime(c.lastTimestamp) : '';
+
+						var badge = document.createElement('span');
+						badge.className = 'messaging-unread-badge';
+						badge.textContent = '';
+
+						right.appendChild(badge);
+						right.appendChild(time);
+
+						top.appendChild(name);
+						top.appendChild(right);
+
+						var preview = document.createElement('span');
+						preview.className = 'messaging-convo-preview';
+						preview.textContent = c.lastMessage || '';
+
+						meta.appendChild(top);
+						meta.appendChild(preview);
+
+						btn.appendChild(avatar);
+						btn.appendChild(meta);
+
+						btn.addEventListener('click', function () {
+							var selectedName = btn.dataset.contactName || 'Conversation';
+							activeContactId = btn.dataset.contactId || null;
+							chatTitle.textContent = selectedName;
+							chatSubtitle.textContent = 'Connected';
+							loadHistory(activeContactId);
+
+							list.querySelectorAll('.messaging-convo-item').forEach(function (el) {
+								el.classList.remove('is-active');
+								el.removeAttribute('aria-current');
+							});
+							btn.classList.add('is-active');
+							btn.setAttribute('aria-current', 'true');
+						});
+
+						list.appendChild(btn);
+					});
+
+					updateUnreadBadges();
+
+					if (pendingContactId) {
+						var target = list.querySelector('.messaging-convo-item[data-contact-id="' + CSS.escape(pendingContactId) + '"]');
+						if (target) {
+							pendingContactId = null;
+							target.click();
+						}
+					}
+				}
+
+				function updateUnreadBadges() {
+					list.querySelectorAll('.messaging-convo-item').forEach(function (item) {
+						var cid = item.dataset.contactId || '';
+						var badge = item.querySelector('.messaging-unread-badge');
+						if (!badge) return;
+						var n = Number(unreadByContact[cid] || 0);
+						if (String(activeContactId || '') === String(cid)) n = 0;
+						if (n > 0) {
+							badge.textContent = n > 9 ? '9+' : String(n);
+							badge.classList.add('is-visible');
+						} else {
+							badge.textContent = '';
+							badge.classList.remove('is-visible');
+						}
+					});
+				}
+
+				function reconcileUnread(convos) {
+					(convos || []).forEach(function (c) {
+						var cid = String(c.contactId || '');
+						if (!cid) return;
+						var count = Number(c.unreadCount || 0) || 0;
+						if (String(activeContactId || '') === cid) {
+							unreadByContact[cid] = 0;
+						} else {
+							unreadByContact[cid] = count;
+						}
+					});
+				}
+
+				function loadConversations() {
+					if (isSearchMode) return;
+					fetch(apiBase + '/api/conversations', { headers: { 'Accept': 'application/json' } })
+						.then(function (res) {
+							if (!res.ok) {
+								throw new Error('conversations_http_' + res.status);
+							}
+							return res.json();
+						})
+						.then(function (data) {
+							var convos = Array.isArray(data) ? data : [];
+							reconcileUnread(convos);
+							renderConversationList(convos);
+						})
+						.catch(function () {
+							/* keep existing list on transient fetch errors */
+						});
+				}
+
+				sendBtn.addEventListener('click', sendMessage);
+				msgInput.addEventListener('keydown', function (e) {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						sendMessage();
+					}
+				});
+
+				if (searchEl) {
+					searchEl.addEventListener('input', function () {
+						var q = String(searchEl.value || '');
+						if (debounceTimer) window.clearTimeout(debounceTimer);
+						debounceTimer = window.setTimeout(function () {
+							searchContacts(q);
+						}, 220);
+					});
+					searchEl.addEventListener('keydown', function (e) {
+						if (e.key === 'Escape') {
+							searchEl.value = '';
+							isSearchMode = false;
+							loadConversations();
+						}
+					});
+				}
+
+				// Poll open chat only; history GET marks read server-side (no list refetch)
+				window.setInterval(function () {
+					if (!activeContactId) return;
+					fetchAndRenderHistory(activeContactId);
+				}, 5000);
+
+				// Sidebar polling: discover new conversations automatically
+				window.setInterval(function () {
+					loadConversations();
+				}, 7000);
+
+				loadConversations();
+				setEmptyConversationState('Select a contact');
+			})();
+		</script>
+	</main>
+</body>
+</html>

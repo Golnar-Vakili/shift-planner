@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{dashboard/layout :: layout(content=~{::main})}">
+<head>
+	<title>Dashboard</title>
+	<meta name="_csrf" th:content="${_csrf.token}" content=""/>
+	<meta name="_csrf_header" th:content="${_csrf.headerName}" content="X-CSRF-TOKEN"/>
+</head>
+<body>
+	<main th:fragment="main" class="dashboard-home">
+		<div id="dashboard-toast-container" class="toast-list" aria-live="polite"></div>
+		<!-- Status / approval message bar -->
+		<div th:if="${shiftPlanApprovedMessage}" class="dashboard-status-bar" role="status">
+			<span class="dashboard-status-icon" aria-hidden="true">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+			</span>
+			<span class="dashboard-status-text" th:text="${shiftPlanApprovedMessage}">Your weekly shift plan has been approved.</span>
+		</div>
+
+		<!-- Compact summary row -->
+		<div class="dashboard-summary-row">
+			<div class="dashboard-summary-card dashboard-summary-card-export">
+				<button type="button" class="dashboard-summary-card-action" id="dashboard-print-pdf" th:attr="data-export-url=@{/api/dashboard/export/pdf}" aria-label="Export shift and holiday plan as PDF">
+					<span class="dashboard-summary-icon dashboard-summary-icon-export" aria-hidden="true">
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+					</span>
+					<span class="dashboard-summary-content">
+						<span class="dashboard-summary-label">Export Schedule</span>
+						<span class="dashboard-summary-value">Download PDF</span>
+					</span>
+				</button>
+			</div>
+			<div class="dashboard-summary-card">
+				<span class="dashboard-summary-icon" aria-hidden="true">
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+				</span>
+				<div class="dashboard-summary-content">
+					<span class="dashboard-summary-label">This week (planned)</span>
+					<span class="dashboard-summary-value" th:text="|${#numbers.formatDecimal(thisWeekPlannedHours, 1, 1)} h|">0 h</span>
+				</div>
+			</div>
+			<div class="dashboard-summary-card">
+				<span class="dashboard-summary-icon" aria-hidden="true">
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+				</span>
+				<div class="dashboard-summary-content">
+					<span class="dashboard-summary-label">Approved shifts</span>
+					<span class="dashboard-summary-value" th:text="|${#lists.size(shiftsCurrentMonth) + #lists.size(shiftsNextMonth)} in next 2 months|">0 in next 2 months</span>
+				</div>
+			</div>
+			<div class="dashboard-summary-card" th:if="${vacationSummary != null}">
+				<span class="dashboard-summary-icon" aria-hidden="true">
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+				</span>
+				<div class="dashboard-summary-content">
+					<span class="dashboard-summary-label">Vacation <span th:text="${vacationSummary.year()}">2026</span></span>
+					<span class="dashboard-summary-value" th:text="|${vacationSummary.selectedCount()} / ${vacationSummary.entitlementDays()} days|">0 / 20 days</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- Main content grid (2-column, aligned) -->
+		<div class="dashboard-grid dashboard-main-grid">
+			<div class="dashboard-card dashboard-month-card dashboard-col-left">
+					<h2 class="dashboard-card-title">
+						<span class="dashboard-card-title-icon" aria-hidden="true">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+						</span>
+						<span th:text="${#temporals.format(currentMonth, 'MMMM yyyy')}">March 2026</span>
+					</h2>
+					<div class="dashboard-month-meta" th:if="${!#lists.isEmpty(shiftsCurrentMonth)}">
+						<span class="dashboard-month-meta-item" th:text="|${#lists.size(shiftsCurrentMonth)} shift(s)|">0 shift(s)</span>
+					</div>
+					<th:block th:if="${#lists.isEmpty(shiftsCurrentMonth)}">
+						<div class="dashboard-empty-state">
+							<p class="dashboard-empty-state-title">No shifts assigned yet</p>
+							<p class="dashboard-empty-state-sub">Plan your shifts for this month in the Shift Planner.</p>
+							<a th:href="@{/dashboard/shifts}" class="btn btn-dashboard-primary">Open Shift Planner</a>
+						</div>
+					</th:block>
+					<div th:unless="${#lists.isEmpty(shiftsCurrentMonth)}" class="dashboard-shift-list-wrap">
+						<ul class="dashboard-shift-list">
+							<li th:each="shift : ${shiftsCurrentMonth}" class="dashboard-shift-item" th:text="${shift}">Shift line</li>
+						</ul>
+						<a th:href="@{/dashboard/shifts}" class="btn btn-dashboard-secondary">View all / Edit</a>
+					</div>
+			</div>
+			<div class="dashboard-card dashboard-month-card dashboard-col-right">
+					<h2 class="dashboard-card-title">
+						<span class="dashboard-card-title-icon" aria-hidden="true">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+						</span>
+						<span th:text="${#temporals.format(nextMonth, 'MMMM yyyy')}">April 2026</span>
+					</h2>
+					<div class="dashboard-month-meta" th:if="${!#lists.isEmpty(shiftsNextMonth)}">
+						<span class="dashboard-month-meta-item" th:text="|${#lists.size(shiftsNextMonth)} shift(s)|">0 shift(s)</span>
+					</div>
+					<th:block th:if="${#lists.isEmpty(shiftsNextMonth)}">
+						<div class="dashboard-empty-state">
+							<p class="dashboard-empty-state-title">No shifts assigned yet</p>
+							<p class="dashboard-empty-state-sub">Plan your shifts for this month in the Shift Planner.</p>
+							<a th:href="@{/dashboard/shifts}" class="btn btn-dashboard-primary">Plan Shifts</a>
+						</div>
+					</th:block>
+					<div th:unless="${#lists.isEmpty(shiftsNextMonth)}" class="dashboard-shift-list-wrap">
+						<ul class="dashboard-shift-list">
+							<li th:each="shift : ${shiftsNextMonth}" class="dashboard-shift-item" th:text="${shift}">Shift line</li>
+						</ul>
+						<a th:href="@{/dashboard/shifts}" class="btn btn-dashboard-secondary">View all / Edit</a>
+					</div>
+			</div>
+
+			<!-- Bottom cards aligned to same columns -->
+			<div class="dashboard-card dashboard-holidays-card dashboard-col-left">
+						<div class="dashboard-card-head-row">
+							<h2 class="dashboard-card-title">
+								<span class="dashboard-card-title-icon" aria-hidden="true">
+									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 14l2 2 4-4"/></svg>
+								</span>
+								Vacation &amp; approved requests
+							</h2>
+							<a th:href="@{/dashboard/holidays}" class="btn btn-dashboard-primary btn-dashboard-vac-cta btn-dashboard-vac-cta-compact">Request Holiday</a>
+						</div>
+
+						<th:block th:if="${approvedVacations != null and !#lists.isEmpty(approvedVacations)}">
+							<p class="dashboard-empty-state-sub dashboard-vac-approved-sub">Approved vacation days</p>
+							<div class="dashboard-vac-approved-scroll" aria-label="Approved vacation days">
+								<div class="dashboard-vac-approved-list">
+									<span th:each="d : ${approvedVacations}" class="dashboard-vac-approved-badge" th:text="${#temporals.format(d, 'dd.MM.yyyy')}">12.05.2026</span>
+								</div>
+							</div>
+						</th:block>
+
+						<th:block th:if="${approvedVacations == null or #lists.isEmpty(approvedVacations)}">
+							<th:block th:if="${#lists.isEmpty(rejectedHolidaysThisYear)}">
+								<div class="dashboard-empty-state dashboard-empty-state-inline dashboard-vac-empty">
+									<div class="dashboard-vac-empty-left">
+										<p class="dashboard-empty-state-title">No rejected vacation requests this year</p>
+										<p class="dashboard-empty-state-sub">Select your vacation days and submit your request when ready.</p>
+									</div>
+									<div class="dashboard-vac-empty-right" aria-hidden="true">
+										<span class="dashboard-vac-graphic">
+											<svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+												<rect x="3" y="4" width="18" height="18" rx="3" ry="3"></rect>
+												<line x1="16" y1="2" x2="16" y2="6"></line>
+												<line x1="8" y1="2" x2="8" y2="6"></line>
+												<line x1="3" y1="10" x2="21" y2="10"></line>
+												<path d="M8.5 14.5l2 2 5-5"></path>
+											</svg>
+										</span>
+									</div>
+								</div>
+							</th:block>
+						</th:block>
+
+						<div th:unless="${#lists.isEmpty(rejectedHolidaysThisYear)}" class="dashboard-rejected-wrap">
+							<ul class="dashboard-list dashboard-rejected-list">
+								<li th:each="req : ${rejectedHolidaysThisYear}" th:text="${req}">Rejected request message</li>
+							</ul>
+							<a th:href="@{/dashboard/holidays}" class="btn btn-dashboard-primary">Submit new request</a>
+						</div>
+			</div>
+
+			<aside class="dashboard-card dashboard-quick-card dashboard-col-right" aria-label="Quick actions">
+						<h2 class="dashboard-card-title">
+							<span class="dashboard-card-title-icon" aria-hidden="true">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>
+							</span>
+							Quick actions
+						</h2>
+						<div class="dashboard-quick-actions">
+							<a th:href="@{/dashboard/shifts}" class="btn btn-dashboard-secondary dashboard-quick-btn">
+								<span class="dashboard-quick-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+								<span>Shift Planner</span>
+							</a>
+							<a th:href="@{/dashboard/holidays}" class="btn btn-dashboard-secondary dashboard-quick-btn">
+								<span class="dashboard-quick-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H7l-4 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></span>
+								<span>Select Holidays</span>
+							</a>
+							<a th:href="@{/dashboard/contract}" class="btn btn-dashboard-secondary dashboard-quick-btn">
+								<span class="dashboard-quick-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+								<span>Contract</span>
+							</a>
+							<a th:href="@{/dashboard/message}" class="btn btn-dashboard-secondary dashboard-quick-btn">
+								<span class="dashboard-quick-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+								<span>Messages</span>
+							</a>
+						</div>
+			</aside>
+		</div>
+
+		<!-- Printable content (hidden on screen, shown when printing) -->
+		<div id="dashboard-print-area" class="dashboard-print-area" aria-hidden="true">
+			<h2>Shift &amp; Holiday Plan</h2>
+			<p class="dashboard-print-date" id="dashboard-print-date"></p>
+			<section class="dashboard-print-section">
+				<h3 th:text="${#temporals.format(currentMonth, 'MMMM yyyy')}">March 2026</h3>
+				<ul class="dashboard-print-list" th:if="${!#lists.isEmpty(shiftsCurrentMonth)}">
+					<li th:each="shift : ${shiftsCurrentMonth}" th:text="${shift}">Shift</li>
+				</ul>
+				<p th:if="${#lists.isEmpty(shiftsCurrentMonth)}" class="dashboard-print-empty">No shifts this month.</p>
+			</section>
+			<section class="dashboard-print-section">
+				<h3 th:text="${#temporals.format(nextMonth, 'MMMM yyyy')}">April 2026</h3>
+				<ul class="dashboard-print-list" th:if="${!#lists.isEmpty(shiftsNextMonth)}">
+					<li th:each="shift : ${shiftsNextMonth}" th:text="${shift}">Shift</li>
+				</ul>
+				<p th:if="${#lists.isEmpty(shiftsNextMonth)}" class="dashboard-print-empty">No shifts this month.</p>
+			</section>
+			<section class="dashboard-print-section" th:if="${vacationSummary != null}">
+				<h3>Vacation <span th:text="${vacationSummary.year()}">2026</span></h3>
+				<p th:text="|${vacationSummary.selectedCount()} of ${vacationSummary.entitlementDays()} days selected|">0 of 20 days selected</p>
+				<ul class="dashboard-print-list" th:if="${vacationSummary.selectedDates != null and !#lists.isEmpty(vacationSummary.selectedDates)}">
+					<li th:each="d : ${vacationSummary.selectedDates}" th:text="${#temporals.format(d, 'EEE d MMM yyyy')}">Date</li>
+				</ul>
+				<p th:if="${vacationSummary.selectedDates == null or #lists.isEmpty(vacationSummary.selectedDates)}" class="dashboard-print-empty">No vacation days selected yet.</p>
+			</section>
+		</div>
+
+		<!-- Export logic must live inside the fragment (th:replace uses only ::main) -->
+		<script>
+		(function() {
+			function showToast(message, type) {
+				type = type || 'success';
+				var container = document.getElementById('dashboard-toast-container');
+				if (!container) return;
+				var toast = document.createElement('div');
+				toast.className = 'toast toast-' + (type === 'error' ? 'error' : 'success');
+				toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+				toast.innerHTML = '<span class="toast-icon" aria-hidden="true">' + (type === 'error' ? '!' : '✓') + '</span><span>' + escapeHtml(message) + '</span>';
+				container.appendChild(toast);
+				setTimeout(function() {
+					toast.classList.add('toast-out');
+					setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 250);
+				}, 4500);
+			}
+			function escapeHtml(s) {
+				if (s == null) return '';
+				var div = document.createElement('div');
+				div.textContent = s;
+				return div.innerHTML;
+			}
+			function getFilenameFromDisposition(disposition) {
+				if (!disposition) return null;
+				var m = /filename=\"?([^\";]+)\"?/i.exec(disposition);
+				return m && m[1] ? m[1] : null;
+			}
+
+			var btn = document.getElementById('dashboard-print-pdf');
+			if (!btn) return;
+
+			btn.addEventListener('click', function() {
+				console.log('[Dashboard] Export PDF clicked');
+				btn.disabled = true;
+				btn.setAttribute('aria-busy', 'true');
+
+				var exportUrl = btn.getAttribute('data-export-url') || '/api/dashboard/export/pdf';
+				console.log('[Dashboard] Export URL:', exportUrl);
+
+				fetch(exportUrl, { method: 'GET', credentials: 'same-origin' })
+					.then(function(res) {
+						console.log('[Dashboard] Export response:', res.status, res.statusText);
+						if (!res.ok) {
+							return res.text().then(function(t) {
+								throw new Error(t || ('Export failed (HTTP ' + res.status + ').'));
+							});
+						}
+						var ct = (res.headers.get('Content-Type') || '').toLowerCase();
+						if (ct.indexOf('application/pdf') === -1) {
+							throw new Error('Export did not return a PDF file.');
+						}
+						var filename = getFilenameFromDisposition(res.headers.get('Content-Disposition')) || 'shift-holiday-plan.pdf';
+						return res.blob().then(function(blob) { return { blob: blob, filename: filename }; });
+					})
+					.then(function(result) {
+						var url = window.URL.createObjectURL(result.blob);
+						var a = document.createElement('a');
+						a.href = url;
+						a.download = result.filename;
+						document.body.appendChild(a);
+						a.click();
+						a.remove();
+						window.URL.revokeObjectURL(url);
+						showToast('PDF export started.', 'success');
+					})
+					.catch(function(err) {
+						console.error('[Dashboard] Export failed:', err);
+						showToast(err && err.message ? err.message : 'PDF export failed.', 'error');
+					})
+					.then(function() {
+						btn.disabled = false;
+						btn.removeAttribute('aria-busy');
+					});
+			});
+		})();
+		</script>
+	</main>
+</body>
+</html>

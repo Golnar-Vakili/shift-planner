@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<title>Error</title>
+	<link rel="stylesheet" th:href="@{/css/style.css}" href="../static/css/style.css"/>
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-bg" aria-hidden="true"><div class="spheres"></div></div>
+	<div class="dashboard-layout" style="max-width: 560px; margin: 2rem auto; padding: 2rem;">
+		<div class="dashboard-card" style="padding: 2rem;">
+			<h1 style="margin: 0 0 1rem 0; font-size: 1.5rem;">Something went wrong</h1>
+			<p th:if="${status}" th:text="'Error ' + ${status} + '.'">Error.</p>
+			<p th:if="${errorMessage}" th:text="${errorMessage}">An unexpected error occurred.</p>
+			<p th:if="${errorMessage == null or #strings.isEmpty(errorMessage)}">An unexpected error occurred. Please try again or go back.</p>
+			<p style="margin-top: 1.5rem;">
+				<a th:if="${errorRequestUri != null and #strings.contains(errorRequestUri, '/admin/vacation-requests')}"
+				   th:href="@{/admin/vacation-requests}" class="admin-btn admin-btn-link">← Vacation requests</a>
+				<a th:if="${errorRequestUri != null and #strings.contains(errorRequestUri, '/admin/shift-plans')}"
+				   th:href="@{/admin/shift-plans}" class="admin-btn admin-btn-link">← Shift plans</a>
+				<a th:if="${errorRequestUri == null or (!#strings.contains(errorRequestUri, '/admin/vacation-requests') and !#strings.contains(errorRequestUri, '/admin/shift-plans'))}"
+				   th:href="@{/dashboard}" class="admin-btn admin-btn-link">← Dashboard</a>
+				<a th:href="@{/admin/dashboard}" class="admin-btn admin-btn-link" style="margin-left: 0.5rem;">Admin dashboard</a>
+			</p>
+		</div>
+	</div>
+</body>
+</html>

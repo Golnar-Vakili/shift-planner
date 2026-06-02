@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(content=~{::main})}">
+<head>
+	<title>Shift plans</title>
+</head>
+<body>
+	<main th:fragment="main">
+		<section class="admin-shift-list-shell">
+		<h1 class="admin-page-title admin-shift-list-title">Shift plans</h1>
+		<p class="admin-page-desc admin-shift-list-desc">Review and approve or reject submitted shift plans. Pending plans are listed first.</p>
+
+		<div th:if="${successMessage}" class="admin-flash-toast admin-flash-toast--success" role="status" th:text="${successMessage}">Success</div>
+		<div th:if="${errorMessage}" class="admin-flash-toast admin-flash-toast--error" role="alert" th:text="${errorMessage}">Error</div>
+
+		<div class="admin-table-wrap">
+			<form th:if="${plans != null and !plans.isEmpty()}" th:action="@{/admin/shift-plans/delete-bulk}" method="post" id="bulkDeleteForm">
+				<input th:if="${_csrf != null}" type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+
+				<div class="admin-bulkbar" id="bulkBar" style="display:none;">
+					<div class="admin-bulkbar-left">
+						<span class="admin-bulkbar-count" id="selectedCount">0</span>
+						<span class="admin-bulkbar-label">selected</span>
+					</div>
+					<div class="admin-bulkbar-actions">
+						<button type="submit" class="admin-btn admin-btn-reject" onclick="return confirm('Delete selected shift plans? This removes them from the admin list.');">Delete selected</button>
+						<button type="button" class="admin-btn admin-btn-ghost" id="clearSelectionBtn">Clear selection</button>
+					</div>
+				</div>
+
+				<table class="admin-table admin-shift-list-table">
+					<thead>
+						<tr>
+							<th class="admin-cell-checkbox" style="width: 38px;">
+								<input type="checkbox" id="selectAll" class="admin-check" aria-label="Select all shift plans"/>
+							</th>
+							<th>Employee</th>
+							<th>Period</th>
+							<th>Planned hours</th>
+							<th>Status</th>
+							<th>Submitted</th>
+							<th style="width: 220px;">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="p : ${plans}" class="admin-shift-row">
+							<td class="admin-cell-checkbox">
+								<input type="checkbox" class="rowSelect admin-check" name="planIds" th:value="${p.id}" aria-label="Select shift plan"/>
+							</td>
+							<td th:text="${p.employeeName()}">—</td>
+							<td><span th:text="${p.periodStart()}">—</span> – <span th:text="${p.periodEnd()}">—</span></td>
+							<td th:text="|${#numbers.formatDecimal(p.totalPlannedHours(), 1, 1)} h|">—</td>
+							<td>
+								<span class="admin-status-badge" th:classappend="${'admin-status-' + p.status().toLowerCase()}" th:text="${p.status()}">PENDING</span>
+							</td>
+							<td th:text="${p.submittedAtFormatted()}">—</td>
+							<td>
+								<div class="admin-row-actions">
+								<a th:href="@{/admin/shift-plans/{id}(id=${p.id})}" class="admin-btn admin-btn-link admin-btn-sm">View</a>
+								<form th:action="@{/admin/shift-plans/{id}/delete(id=${p.id})}" method="post" style="display:inline;" onsubmit="return confirm('Delete this shift plan? This removes it from the admin list.');">
+									<input th:if="${_csrf != null}" type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+									<button type="submit" class="admin-btn admin-btn-reject admin-btn-sm">Delete</button>
+								</form>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+			<p th:if="${plans == null or plans.isEmpty()}" class="admin-empty">No shift plans yet.</p>
+		</div>
+		</section>
+	</main>
+
+	<script>
+		(function() {
+			function qs(sel) { return document.querySelector(sel); }
+			function qsa(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+			var selectAll = qs('#selectAll');
+			var rows = function() { return qsa('.rowSelect'); };
+			var bulkBar = qs('#bulkBar');
+			var selectedCount = qs('#selectedCount');
+			var clearSelectionBtn = qs('#clearSelectionBtn');
+
+			function update() {
+				var list = rows();
+				var checked = list.filter(function(x) { return x.checked; }).length;
+				if (selectedCount) selectedCount.textContent = String(checked);
+				if (bulkBar) bulkBar.style.display = checked > 0 ? 'flex' : 'none';
+				list.forEach(function(x) {
+					var tr = x.closest('tr');
+					if (!tr) return;
+					if (x.checked) tr.classList.add('is-selected');
+					else tr.classList.remove('is-selected');
+				});
+				if (selectAll) {
+					selectAll.checked = checked > 0 && checked === list.length;
+					selectAll.indeterminate = checked > 0 && checked < list.length;
+				}
+			}
+
+			if (selectAll) {
+				selectAll.addEventListener('change', function() {
+					rows().forEach(function(x) { x.checked = selectAll.checked; });
+					update();
+				});
+			}
+			if (clearSelectionBtn) {
+				clearSelectionBtn.addEventListener('click', function() {
+					rows().forEach(function(x) { x.checked = false; });
+					if (selectAll) {
+						selectAll.checked = false;
+						selectAll.indeterminate = false;
+					}
+					update();
+				});
+			}
+			rows().forEach(function(x) { x.addEventListener('change', update); });
+			update();
+		})();
+	</script>
+</body>
+</html>

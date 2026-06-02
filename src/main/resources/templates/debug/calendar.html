@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Debug: Calendar only</title>
+	<style>
+		/* Minimal page: no layout tricks, ensure calendar is visible */
+		body { margin: 20px; font-family: system-ui, sans-serif; background: #1a1a2e; color: #eee; }
+		h1 { font-size: 1.25rem; margin-bottom: 16px; }
+		#calendar-wrap {
+			min-height: 520px;
+			overflow: visible;
+			background: #16213e;
+			padding: 16px;
+			border-radius: 8px;
+		}
+		/* Force FullCalendar day numbers visible (debug override) */
+		.fc-daygrid-day-number { color: #fff !important; font-size: 14px !important; opacity: 1 !important; visibility: visible !important; }
+		.fc-col-header-cell-cushion { color: #ccc !important; font-size: 13px !important; }
+		.fc-toolbar-title { color: #fff !important; font-size: 1.25rem !important; }
+	</style>
+</head>
+<body>
+	<h1>Debug: FullCalendar only (no layout)</h1>
+	<p>If you see month name, year, and date numbers 1–31 below, the calendar works. The issue is then CSS/layout on Select Shifts.</p>
+	<div id="calendar-wrap">
+		<div id="calendar"></div>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/locales/de.global.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			var calendarEl = document.getElementById('calendar');
+			if (!calendarEl) return;
+			var calendar = new FullCalendar.Calendar(calendarEl, {
+				initialView: 'dayGridMonth',
+				locale: 'de',
+				firstDay: 1,
+				headerToolbar: { left: 'prev,next', center: 'title', right: '' },
+				fixedWeekCount: false
+			});
+			calendar.render();
+		});
+	</script>
+</body>
+</html>

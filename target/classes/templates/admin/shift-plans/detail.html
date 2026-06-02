@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(content=~{::main})}">
+<head>
+	<title>Shift plan detail</title>
+</head>
+<body>
+	<main th:fragment="main">
+		<div class="admin-detail-head">
+			<a th:href="@{/admin/shift-plans}" class="admin-back-link">← Shift plans</a>
+			<h1 class="admin-page-title">Shift plan <span th:text="${plan.id()}">1</span></h1>
+		</div>
+
+		<div th:if="${successMessage}" class="admin-flash-toast admin-flash-toast--success" role="status" th:text="${successMessage}">Success</div>
+		<div th:if="${errorMessage}" class="admin-flash-toast admin-flash-toast--error" role="alert" th:text="${errorMessage}">Error</div>
+
+		<div class="dashboard-card admin-detail-card">
+			<dl class="admin-detail-list">
+				<dt>Employee</dt>
+				<dd th:text="${plan.employeeName()}">—</dd>
+				<dt>Period</dt>
+				<dd th:with="firstEntry=${plan.entries() != null and !plan.entries().isEmpty()} ? plan.entries()[0] : null, lastEntry=${plan.entries() != null and !plan.entries().isEmpty()} ? plan.entries()[#lists.size(plan.entries())-1] : null">
+					<span th:if="${firstEntry != null and lastEntry != null and firstEntry.date() != null and lastEntry.date() != null}" th:text="|${firstEntry.date()} – ${lastEntry.date()}|">—</span>
+					<span th:if="${firstEntry == null or lastEntry == null or firstEntry.date() == null or lastEntry.date() == null}">—</span>
+				</dd>
+				<dt>Contract type</dt>
+				<dd th:text="${plan.contractTypeLabel()}">—</dd>
+				<dt>Expected weekly hours</dt>
+				<dd><span th:if="${plan.expectedWeeklyHours() != null}" th:text="|${#numbers.formatDecimal(plan.expectedWeeklyHours(), 1, 1)} h|">—</span><span th:if="${plan.expectedWeeklyHours() == null}">—</span></dd>
+				<dt>Planned total hours</dt>
+				<dd th:text="|${#numbers.formatDecimal(plan.plannedTotalHours(), 1, 1)} h|">—</dd>
+				<dt>Shift entries</dt>
+				<dd>
+					<ul th:if="${plan.entries() != null and !plan.entries().isEmpty()}" class="admin-dates-list">
+						<li th:each="e : ${plan.entries()}">
+							<span th:if="${e.date() != null}" th:text="|${e.date()} — ${e.label()}|">date — label</span>
+							<span th:if="${e.date() == null}" th:text="${e.label()}">label</span>
+						</li>
+					</ul>
+					<span th:if="${plan.entries() == null or plan.entries().isEmpty()}">—</span>
+				</dd>
+				<dt>Status</dt>
+				<dd>
+					<span class="admin-status-badge" th:classappend="${plan.status() != null ? ('admin-status-' + plan.status().toLowerCase()) : 'admin-status-pending_approval'}" th:text="${plan.status() != null ? plan.status() : 'PENDING_APPROVAL'}">PENDING</span>
+				</dd>
+				<dt>Submitted at</dt>
+				<dd th:text="${plan.submittedAtFormatted()}">—</dd>
+				<dt th:if="${plan.reviewedAtFormatted() != null}">Reviewed at</dt>
+				<dd th:if="${plan.reviewedAtFormatted() != null}" th:text="${plan.reviewedAtFormatted()}">—</dd>
+				<dt th:if="${plan.rejectionReason() != null and !plan.rejectionReason().isBlank()}">Rejection reason</dt>
+				<dd th:if="${plan.rejectionReason() != null and !plan.rejectionReason().isBlank()}" th:text="${plan.rejectionReason()}">—</dd>
+			</dl>
+
+			<div th:if="${plan.status() != null and plan.status() == 'PENDING_APPROVAL'}" class="admin-actions">
+				<form th:action="@{/admin/shift-plans/{id}/approve(id=${plan.id()})}" method="post" class="admin-action-form">
+					<input th:if="${_csrf != null}" type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+					<button type="submit" class="admin-btn admin-btn-approve">Approve</button>
+				</form>
+				<form th:action="@{/admin/shift-plans/{id}/reject(id=${plan.id()})}" method="post" class="admin-action-form">
+					<input th:if="${_csrf != null}" type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+					<label for="reject-reason" class="admin-reject-label">Rejection reason (optional)</label>
+					<textarea id="reject-reason" name="reason" class="admin-reject-input" rows="2" maxlength="500" placeholder="Optional reason for rejection"></textarea>
+					<button type="submit" class="admin-btn admin-btn-reject">Reject</button>
+				</form>
+			</div>
+		</div>
+	</main>
+</body>
+</html>

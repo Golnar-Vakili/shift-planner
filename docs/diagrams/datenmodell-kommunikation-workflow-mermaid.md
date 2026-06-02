@@ -1,0 +1,63 @@
+# Datenmodell – Communication and Workflow (Mermaid)
+
+```mermaid
+erDiagram
+    users {
+        bigint id PK
+        string username
+        boolean admin
+    }
+
+    support_requests {
+        bigint id PK
+        bigint user_id FK
+        string category
+        string message
+        string status
+        datetime created_at
+    }
+
+    app_chat_messages {
+        bigint id PK
+        bigint sender_id FK
+        bigint receiver_id FK
+        string content
+        datetime sent_at
+        datetime read_at
+    }
+
+    app_notifications {
+        bigint id PK
+        bigint user_id FK
+        string notification_type
+        string message
+        string link
+        datetime created_at
+        datetime read_at
+    }
+
+    app_overtime_requests {
+        bigint id PK
+        bigint created_by FK
+        string title
+        string status
+        date work_date
+        datetime created_at
+    }
+
+    app_overtime_request_recipients {
+        bigint id PK
+        bigint request_id FK
+        bigint employee_id FK
+        string response_status
+        datetime responded_at
+    }
+
+    users ||--o{ support_requests : submits
+    users ||--o{ app_chat_messages : sends
+    users ||--o{ app_chat_messages : receives
+    users ||--o{ app_notifications : notifies
+    users ||--o{ app_overtime_requests : creates
+    app_overtime_requests ||--o{ app_overtime_request_recipients : targets
+    users ||--o{ app_overtime_request_recipients : assigned
+```

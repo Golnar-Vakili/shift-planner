@@ -1,0 +1,65 @@
+# Datenmodell – Workforce Planning (Mermaid)
+
+```mermaid
+erDiagram
+    users {
+        bigint id PK
+        string username
+        string contract_type
+        boolean admin
+    }
+
+    shift_plans {
+        bigint id PK
+        bigint user_id FK
+        date period_start
+        date period_end
+        string status
+        datetime submitted_at
+        datetime reviewed_at
+        bigint reviewed_by_id FK
+        datetime deleted_at
+    }
+
+    shift_entries {
+        bigint id PK
+        bigint plan_id FK
+        date entry_date
+        time start_time
+        time end_time
+        string shift_type
+        int minutes
+        string review_status
+        bigint reviewed_by_id FK
+        datetime reviewed_at
+    }
+
+    vacation_requests {
+        bigint id PK
+        bigint employee_id FK
+        int year
+        string status
+        datetime submitted_at
+        datetime reviewed_at
+        bigint reviewed_by_id FK
+        string rejection_reason
+        datetime deleted_at
+    }
+
+    vacation_request_days {
+        bigint id PK
+        bigint vacation_request_id FK
+        date request_date
+        string review_status
+        bigint reviewed_by_id FK
+        datetime reviewed_at
+    }
+
+    users ||--o{ shift_plans : owns
+    shift_plans ||--o{ shift_entries : contains
+    users ||--o{ vacation_requests : submits
+    vacation_requests ||--o{ vacation_request_days : contains
+    users ||--o{ shift_entries : reviews
+    users ||--o{ vacation_requests : reviews
+    users ||--o{ vacation_request_days : reviews
+```

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(content=~{::main})}">
+<head>
+	<title>Admin Profile</title>
+</head>
+<body>
+	<main th:fragment="main">
+		<div class="dashboard-card" style="max-width: 720px;">
+			<div class="dashboard-card-head">
+				<h2 class="dashboard-card-title">Profile photo</h2>
+			</div>
+
+			<div style="display:flex; align-items:center; gap:16px; padding-top: 10px;">
+				<th:block th:if="${profilePictureUrl != null}">
+					<img class="dashboard-avatar admin-avatar dashboard-avatar-img" th:src="${profilePictureUrl}" alt="Profile picture" style="width:84px;height:84px;"/>
+				</th:block>
+				<th:block th:unless="${profilePictureUrl != null}">
+					<span class="dashboard-avatar admin-avatar" th:text="${#strings.toUpperCase(#strings.substring(displayName != null and !#strings.isEmpty(displayName) ? displayName : (username != null and !#strings.isEmpty(username) ? username : 'A'), 0, 1))}" style="width:84px;height:84px;font-size:1.8rem;">A</span>
+				</th:block>
+				<div style="min-width: 0;">
+					<div style="font-weight:800; font-size:1.1rem;" th:text="${displayName != null ? displayName : username}">Admin</div>
+					<div style="color: rgba(255,255,255,0.72); font-size:0.95rem;" th:text="${username}">username</div>
+				</div>
+			</div>
+
+			<div th:if="${profileUploadSuccess}" class="admin-flash-toast" data-toast-ms="4200" role="status" style="margin-top:16px;">
+				<span th:text="${profileUploadSuccess}">Profile photo updated.</span>
+				<script>window.adminToastMount && window.adminToastMount(document.currentScript.parentElement);</script>
+			</div>
+			<div th:if="${profileUploadError}" class="admin-flash-toast" data-toast-ms="5200" role="status" style="margin-top:16px; border-color: rgba(220,38,38,0.25); background: rgba(220,38,38,0.10);">
+				<span th:text="${profileUploadError}">Upload failed.</span>
+				<script>window.adminToastMount && window.adminToastMount(document.currentScript.parentElement);</script>
+			</div>
+
+			<form th:action="@{/admin/profile/upload}" method="post" enctype="multipart/form-data" style="margin-top:18px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+				<input th:if="${_csrf != null}" type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+				<input type="file" name="file" accept="image/*" class="input" style="max-width: 320px;"/>
+				<button type="submit" class="btn btn-primary">Upload New Photo</button>
+			</form>
+
+			<p style="margin-top:10px; color: rgba(255,255,255,0.70); font-size:0.9rem;">
+				Max size 2MB. JPG/PNG/WEBP.
+			</p>
+		</div>
+	</main>
+</body>
+</html>
+

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(content)">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<meta name="_csrf" th:content="${_csrf.token}" content=""/>
+	<meta name="_csrf_header" th:content="${_csrf.headerName}" content="X-CSRF-TOKEN"/>
+	<title>Dashboard</title>
+	<link rel="stylesheet" th:href="@{/css/style.css}" href="../static/css/style.css"/>
+	<link rel="preconnect" href="https://fonts.googleapis.com"/>
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet"/>
+</head>
+<body class="dashboard-page">
+	<div class="dashboard-bg" aria-hidden="true">
+		<div class="spheres">
+			<div class="sphere sphere-1"><div class="sphere-shape"></div></div>
+			<div class="sphere sphere-2"><div class="sphere-shape"></div></div>
+			<div class="sphere sphere-3"><div class="sphere-shape"></div></div>
+			<div class="sphere sphere-4"><div class="sphere-shape"></div></div>
+			<div class="sphere sphere-5"><div class="sphere-shape"></div></div>
+			<div class="sphere sphere-6"><div class="sphere-shape"></div></div>
+			<div class="sphere sphere-7"><div class="sphere-shape"></div></div>
+			<div class="sphere sphere-8"><div class="sphere-shape"></div></div>
+		</div>
+	</div>
+	<div class="dashboard-layout">
+		<nav class="dashboard-sidebar">
+			<a th:href="@{/dashboard}" th:classappend="${activePage == 'home'} ? 'active'" class="nav-item">
+				<span class="nav-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
+				<span>Dashboard</span>
+			</a>
+			<a th:href="@{/dashboard/shifts}" th:classappend="${activePage == 'shifts'} ? 'active'" class="nav-item">
+				<span class="nav-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+				<span>Select Shifts</span>
+			</a>
+			<a th:href="@{/dashboard/holidays}" th:classappend="${activePage == 'holidays'} ? 'active'" class="nav-item">
+				<span class="nav-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 14l2 2 4-4"/></svg></span>
+				<span>Select Holidays</span>
+			</a>
+			<a th:href="@{/dashboard/contract}" th:classappend="${activePage == 'contract'} ? 'active'" class="nav-item">
+				<span class="nav-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+				<span>Contract Type</span>
+			</a>
+			<a th:href="@{/dashboard/message}" th:classappend="${activePage == 'message'} ? 'active'" class="nav-item">
+				<span class="nav-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+				<span>Send Message</span>
+			</a>
+			<a th:href="@{/dashboard/overtime-requests}" th:classappend="${activePage == 'overtime-requests'} ? 'active'" class="nav-item">
+				<span class="nav-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg></span>
+				<span>Overtime</span>
+			</a>
+		</nav>
+		<main class="dashboard-main">
+			<header class="dashboard-topbar" th:attr="data-display-name=${displayName}, data-username=${username}">
+				<div class="dashboard-topbar-left">
+					<p class="dashboard-greeting" id="dashboard-greeting">Welcome back,</p>
+					<div class="dashboard-topbar-user">
+						<button type="button" class="dashboard-avatar-upload" id="dashboard-avatar-upload" aria-label="Change profile photo">
+							<th:block th:if="${profilePictureUrl != null}">
+								<img class="dashboard-avatar dashboard-avatar-img" id="dashboard-avatar-img" th:src="${profilePictureUrl}" alt="Profile picture"/>
+							</th:block>
+							<th:block th:unless="${profilePictureUrl != null}">
+								<span class="dashboard-avatar" id="dashboard-avatar-fallback" th:text="${#strings.toUpperCase(#strings.substring((displayName != null and !#strings.isEmpty(displayName)) ? displayName : username, 0, 1))}">U</span>
+							</th:block>
+							<span class="dashboard-avatar-camera" aria-hidden="true">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+									<circle cx="12" cy="13" r="4"/>
+								</svg>
+							</span>
+						</button>
+						<input type="file" id="dashboard-avatar-file" accept="image/*" class="dashboard-avatar-file" hidden/>
+						<span class="dashboard-username" th:text="${displayName}">User</span>
+						<div class="dash-notify" id="dash-notify">
+							<button type="button" class="dash-notify-btn" id="dash-notify-btn" aria-label="Notifications" aria-haspopup="menu" aria-expanded="false">
+								<span class="dash-notify-icon" aria-hidden="true">
+									<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+										<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+										<path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+									</svg>
+								</span>
+								<span class="dash-notify-dot" id="dash-notify-dot" aria-hidden="true"></span>
+							</button>
+							<div class="dash-notify-menu" id="dash-notify-menu" role="menu" aria-label="Recent notifications" hidden></div>
+						</div>
+					</div>
+					<p class="dashboard-motivational" id="dashboard-motivational" aria-live="polite"></p>
+				</div>
+				<div class="dashboard-topbar-right">
+					<form th:action="@{/logout}" method="post" class="logout-form">
+						<input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+						<button type="submit" class="btn-logout">
+							<svg class="btn-logout-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+							<span>Logout</span>
+						</button>
+					</form>
+					<div class="dashboard-datetime" aria-live="off">
+						<span class="dashboard-clock" id="dashboard-clock">--:--:--</span>
+						<span class="dashboard-date" id="dashboard-date"></span>
+					</div>
+				</div>
+			</header>
+			<th:block th:if="${activePage == 'shifts'}">
+				<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+				<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.10/index.global.min.js"></script>
+				<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/locales/de.global.js"></script>
+			</th:block>
+			<th:block th:if="${activePage == 'holidays'}">
+				<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+				<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.10/index.global.min.js"></script>
+				<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/locales/de.global.js"></script>
+			</th:block>
+			<div class="dashboard-content" th:replace="${content}">
+				<!-- content from page -->
+			</div>
+		</main>
+	</div>
+	<script>
+	(function() {
+		var MOTIVATIONAL = [
+			'Small steps every day lead to big results.',
+			'You are doing better than you think.',
+			'Stay consistent — progress comes quietly.',
+			'Today is a good day to make things easier for tomorrow.',
+			'One well-planned day can change the whole week.',
+			'Every day is a chance to move forward.',
+			'Good planning today means less stress tomorrow.',
+			'You have everything you need to make today count.',
+			'Progress, not perfection.',
+			'Your effort today is an investment in tomorrow.'
+		];
+		function getGreeting() {
+			var h = new Date().getHours();
+			if (h < 12) return 'Good morning';
+			if (h < 17) return 'Good afternoon';
+			return 'Good evening';
+		}
+		function getFirstName() {
+			var topbar = document.querySelector('.dashboard-topbar');
+			if (!topbar) return 'there';
+			var name = topbar.getAttribute('data-display-name') || topbar.getAttribute('data-username') || '';
+			name = (name || '').trim();
+			if (!name) return 'there';
+			var first = name.split(/\s+/)[0];
+			return first || name;
+		}
+		function getMotivational() {
+			var d = new Date();
+			var dayOfYear = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+			return MOTIVATIONAL[dayOfYear % MOTIVATIONAL.length];
+		}
+		function formatClock() {
+			var n = new Date();
+			var h = n.getHours(), m = n.getMinutes(), s = n.getSeconds();
+			return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+		}
+		function formatDate() {
+			return new Date().toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+		}
+		function initDashboardHeader() {
+			var greetingEl = document.getElementById('dashboard-greeting');
+			var msgEl = document.getElementById('dashboard-motivational');
+			var clockEl = document.getElementById('dashboard-clock');
+			var dateEl = document.getElementById('dashboard-date');
+			if (greetingEl) greetingEl.textContent = getGreeting() + ', ' + getFirstName();
+			if (msgEl) msgEl.textContent = getMotivational();
+			if (clockEl) clockEl.textContent = formatClock();
+			if (dateEl) dateEl.textContent = formatDate();
+			setInterval(function() {
+				if (clockEl) clockEl.textContent = formatClock();
+				var now = new Date();
+				var today = now.getDate();
+				if (dateEl && dateEl._lastDay !== today) {
+					dateEl._lastDay = today;
+					dateEl.textContent = formatDate();
+					if (msgEl) msgEl.textContent = getMotivational();
+					if (greetingEl) greetingEl.textContent = getGreeting() + ', ' + getFirstName();
+				}
+			}, 1000);
+		}
+		if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initDashboardHeader);
+		else initDashboardHeader();
+	})();
+	</script>
+	<script>
+	(function() {
+		function getCsrf() {
+			var metaHeader = document.querySelector('meta[name="_csrf_header"]');
+			var metaToken = document.querySelector('meta[name="_csrf"]');
+			return {
+				header: metaHeader ? metaHeader.getAttribute('content') : null,
+				token: metaToken ? metaToken.getAttribute('content') : null
+			};
+		}
+
+		function initAvatarUpload() {
+			var btn = document.getElementById('dashboard-avatar-upload');
+			var input = document.getElementById('dashboard-avatar-file');
+			if (!btn || !input) return;
+
+			var uploadUrl = '/dashboard/profile/upload';
+			var lastSrc = null;
+
+			function ensureImg() {
+				var img = document.getElementById('dashboard-avatar-img');
+				if (img) return img;
+
+				var fallback = document.getElementById('dashboard-avatar-fallback');
+				img = document.createElement('img');
+				img.className = 'dashboard-avatar dashboard-avatar-img';
+				img.id = 'dashboard-avatar-img';
+				img.alt = 'Profile picture';
+				if (fallback && fallback.parentNode) {
+					fallback.parentNode.replaceChild(img, fallback);
+				} else {
+					btn.insertBefore(img, btn.firstChild);
+				}
+				return img;
+			}
+
+			btn.addEventListener('click', function() {
+				input.click();
+			});
+
+			input.addEventListener('change', function() {
+				var file = input.files && input.files[0] ? input.files[0] : null;
+				if (!file) return;
+
+				// instant UI update (local preview)
+				var img = ensureImg();
+				lastSrc = img.getAttribute('src') || null;
+				var objectUrl = URL.createObjectURL(file);
+				img.src = objectUrl;
+
+				var fd = new FormData();
+				fd.append('file', file);
+
+				var csrf = getCsrf();
+				var headers = {};
+				if (csrf.header && csrf.token) headers[csrf.header] = csrf.token;
+
+				fetch(uploadUrl, {
+					method: 'POST',
+					body: fd,
+					headers: headers,
+					credentials: 'same-origin'
+				}).then(function(res) {
+					if (!res.ok) throw new Error('upload_failed');
+					// keep preview; server will persist path
+				}).catch(function() {
+					// revert on failure
+					if (lastSrc) img.src = lastSrc;
+				}).finally(function() {
+					// allow uploading the same file again
+					input.value = '';
+				});
+			});
+		}
+
+		if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAvatarUpload);
+		else initAvatarUpload();
+	})();
+	</script>
+	<script>
+	(function() {
+		var btn = document.getElementById('dash-notify-btn');
+		var menu = document.getElementById('dash-notify-menu');
+		var dot = document.getElementById('dash-notify-dot');
+		if (!btn || !menu || !dot) return;
+
+		var STORAGE_SEEN = 'dash_notify_last_seen_msg_id';
+		var STORAGE_SEEN_SYS = 'dash_notify_last_seen_sys_id';
+		var STORAGE_QUEUE = 'dash_notify_queue_v1';
+		var MAX_ITEMS = 6;
+
+		function esc(s) {
+			return String(s || '')
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#039;');
+		}
+
+		function readNum(key, fallback) {
+			try {
+				var v = window.localStorage.getItem(key);
+				var n = Number(v);
+				return Number.isFinite(n) ? n : (fallback || 0);
+			} catch (e) { return fallback || 0; }
+		}
+		function writeNum(key, value) {
+			try { window.localStorage.setItem(key, String(Number(value) || 0)); } catch (e) {}
+		}
+		function readQueue() {
+			try {
+				var raw = window.localStorage.getItem(STORAGE_QUEUE);
+				var arr = raw ? JSON.parse(raw) : [];
+				return Array.isArray(arr) ? arr : [];
+			} catch (e) { return []; }
+		}
+		function writeQueue(arr) {
+			try { window.localStorage.setItem(STORAGE_QUEUE, JSON.stringify((arr || []).slice(0, MAX_ITEMS))); } catch (e) {}
+		}
+
+		function setHasNew(hasNew) {
+			dot.classList.toggle('is-visible', !!hasNew);
+			btn.classList.toggle('is-shake', !!hasNew);
+		}
+
+		function positionMenu() {
+			try {
+				var r = btn.getBoundingClientRect();
+				var pad = 12;
+				var gap = 10;
+
+				// With CSS-anchored absolute positioning, we only need to:
+				// - flip up if there's not enough space below
+				// - set a max list height so it scrolls nicely
+				var downSpace = window.innerHeight - pad - (r.bottom + gap);
+				var upSpace = (r.top - gap) - pad;
+				var flipUp = (downSpace < 220) && (upSpace > downSpace);
+
+				menu.classList.toggle('is-dropup', !!flipUp);
+
+				var available = flipUp ? upSpace : downSpace;
+				var maxList = Math.max(160, Math.min(320, available - 70)); // 70 ~ pop padding + head/foot
+				menu.style.setProperty('--dash-notify-maxh', maxList + 'px');
+			} catch (e) { /* ignore */ }
+		}
+
+		function openMenu() {
+			btn.setAttribute('aria-expanded', 'true');
+			menu.hidden = false;
+			positionMenu();
+		}
+		function closeMenu() {
+			btn.setAttribute('aria-expanded', 'false');
+			menu.hidden = true;
+		}
+		function toggleMenu() {
+			if (menu.hidden) openMenu();
+			else closeMenu();
+		}
+
+		function renderMenu() {
+			var items = readQueue();
+			if (!items.length) {
+				menu.innerHTML = '<div class="dash-notify-empty">No notifications</div>';
+				return;
+			}
+			menu.innerHTML =
+				'<div class="dash-notify-pop">' +
+					'<div class="dash-notify-pop-head">Notifications</div>' +
+					'<div class="dash-notify-pop-list">' +
+						items.map(function(n) {
+							var unread = (n.read === false);
+							return (
+								'<button type="button" class="dash-notify-item' + (unread ? ' is-unread' : '') + '" role="menuitem" data-contact-id="' + esc(n.contactId) + '">' +
+									'<span class="dash-notify-item-title">' + esc(n.title) + '</span>' +
+									'<span class="dash-notify-item-sub">' + esc(n.sub || '') + '</span>' +
+								'</button>'
+							);
+						}).join('') +
+					'</div>' +
+					'<div class="dash-notify-pop-foot">' +
+						'<a class="dash-notify-viewall" href="/dashboard/message">View all messages</a>' +
+					'</div>' +
+				'</div>';
+
+			menu.querySelectorAll('.dash-notify-item').forEach(function(el) {
+				el.addEventListener('click', function() {
+					var cid = el.getAttribute('data-contact-id');
+					closeMenu();
+					setHasNew(false);
+					var item = readQueue().find(function(x) { return String(x.contactId) === String(cid); });
+					if (item && item.isSystem && item.link) {
+						// mark read best-effort and go to link
+						if (item.notificationId) {
+							fetch('/dashboard/api/notifications/' + encodeURIComponent(String(item.notificationId)) + '/read', { method: 'POST' })
+								.catch(function() {});
+						}
+						window.location.href = item.link;
+						return;
+					}
+					// Navigate straight to that chat
+					window.location.href = '/dashboard/message?contactId=' + encodeURIComponent(String(cid || ''));
+				});
+			});
+		}
+
+		function enqueueNotification(n) {
+			if (!n || !n.contactId) return;
+			var q = readQueue();
+			// de-dupe by lastMessageId
+			if (q.some(function(x) { return String(x.lastMessageId || '') === String(n.lastMessageId || ''); })) return;
+			if (typeof n.read !== 'boolean') n.read = false;
+			q.unshift(n);
+			writeQueue(q);
+			renderMenu();
+		}
+
+		function markAllReadLocal() {
+			var q = readQueue();
+			var changed = false;
+			q.forEach(function(x) {
+				if (x && x.read === false) { x.read = true; changed = true; }
+			});
+			if (changed) writeQueue(q);
+		}
+
+		function poll() {
+			fetch('/dashboard/api/conversations', { headers: { 'Accept': 'application/json' } })
+				.then(function(res) { return res.ok ? res.json() : []; })
+				.then(function(data) {
+					var convos = Array.isArray(data) ? data : [];
+					var newOnes = [];
+					var messageUnread = 0;
+
+					convos.forEach(function(c) {
+						var unread = Number(c && c.unreadCount) || 0;
+						if (unread > 0) {
+							messageUnread += unread;
+							newOnes.push({
+								contactId: c.contactId,
+								lastMessageId: c.lastMessageId,
+								title: 'You have a new message from ' + (c.name || 'someone'),
+								sub: c.lastMessage || ''
+							});
+						}
+					});
+
+					if (newOnes.length) {
+						newOnes
+							.sort(function(a, b) { return (Number(b.lastMessageId) || 0) - (Number(a.lastMessageId) || 0); })
+							.slice(0, MAX_ITEMS)
+							.forEach(enqueueNotification);
+					}
+					if (messageUnread > 0) setHasNew(true);
+				})
+				.catch(function() { /* ignore */ });
+
+			// System/workflow notifications
+			fetch('/dashboard/api/notifications?limit=8', { headers: { 'Accept': 'application/json' } })
+				.then(function(res) { return res.ok ? res.json() : null; })
+				.then(function(feed) {
+					if (!feed || !feed.items) return;
+					var seenSys = readNum(STORAGE_SEEN_SYS, 0);
+					var maxSys = seenSys;
+					(feed.items || []).forEach(function(n) {
+						var id = Number(n && n.id) || 0;
+						if (id > maxSys) maxSys = id;
+						if (id <= seenSys) return;
+						enqueueNotification({
+							contactId: 'sys-' + String(id),
+							lastMessageId: 'sys-' + String(id),
+							title: n.message || 'Notification',
+							sub: n.type ? String(n.type) : '',
+							link: n.link || null,
+							notificationId: id,
+							isSystem: true
+						});
+					});
+					if (maxSys > seenSys) writeNum(STORAGE_SEEN_SYS, maxSys);
+					if (feed.unreadCount && Number(feed.unreadCount) > 0) setHasNew(true);
+				})
+				.catch(function() { /* ignore */ });
+		}
+
+		// interactions
+		btn.addEventListener('click', function(e) {
+			e.stopPropagation();
+			renderMenu();
+			toggleMenu();
+			// user intentionally opened notifications
+			setHasNew(false);
+			markAllReadLocal();
+		});
+		window.addEventListener('resize', function() {
+			if (!menu.hidden) positionMenu();
+		});
+		window.addEventListener('scroll', function() {
+			if (!menu.hidden) positionMenu();
+		}, true);
+		document.addEventListener('click', function(e) {
+			if (menu.hidden) return;
+			var wrap = document.getElementById('dash-notify');
+			if (wrap && wrap.contains(e.target)) return;
+			closeMenu();
+		});
+		document.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape') closeMenu();
+		});
+
+		window.addEventListener('messaging:read', function(e) {
+			var cid = e && e.detail && e.detail.contactId;
+			if (cid) {
+				var q = readQueue();
+				var changed = false;
+				q.forEach(function(x) {
+					if (x && String(x.contactId) === String(cid) && x.read === false) {
+						x.read = true;
+						changed = true;
+					}
+				});
+				if (changed) writeQueue(q);
+			}
+			setHasNew(false);
+			poll();
+		});
+
+		// bootstrap
+		renderMenu();
+		setHasNew(readQueue().length > 0);
+		poll();
+		window.setInterval(poll, 7000);
+	})();
+	</script>
+</body>
+</html>

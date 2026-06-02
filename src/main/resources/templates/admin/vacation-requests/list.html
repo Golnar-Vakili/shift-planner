@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(content=~{::main})}">
+<head>
+	<title>Vacation requests</title>
+</head>
+<body>
+	<main th:fragment="main">
+		<section class="admin-shift-list-shell">
+		<h1 class="admin-page-title admin-shift-list-title">Vacation requests</h1>
+		<p class="admin-page-desc admin-shift-list-desc">Review and approve or reject submitted vacation requests. Pending requests are listed first.</p>
+
+		<div th:if="${successMessage}" class="admin-flash-toast admin-flash-toast--success" role="status" th:text="${successMessage}">Success</div>
+		<div th:if="${errorMessage}" class="admin-flash-toast admin-flash-toast--error" role="alert" th:text="${errorMessage}">Error</div>
+
+		<div class="admin-table-wrap">
+			<form th:if="${requests != null and !requests.isEmpty()}" th:action="@{/admin/vacation-requests/delete-bulk}" method="post" id="vacBulkDeleteForm">
+				<input th:if="${_csrf != null}" type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+
+				<div class="admin-bulkbar" id="vacBulkBar" style="display:none;">
+					<div class="admin-bulkbar-left">
+						<span class="admin-bulkbar-count" id="vacSelectedCount">0</span>
+						<span class="admin-bulkbar-label">selected</span>
+					</div>
+					<div class="admin-bulkbar-actions">
+						<button type="submit" class="admin-btn admin-btn-reject" onclick="return confirm('Delete selected vacation requests? This removes them from the admin list.');">Delete selected</button>
+						<button type="button" class="admin-btn admin-btn-ghost" id="vacClearSelectionBtn">Clear selection</button>
+					</div>
+				</div>
+
+				<table class="admin-table admin-shift-list-table">
+					<thead>
+						<tr>
+							<th class="admin-cell-checkbox" style="width: 38px;">
+								<input type="checkbox" id="vacSelectAll" class="admin-check" aria-label="Select all vacation requests"/>
+							</th>
+							<th>Employee</th>
+							<th style="width: 90px;">Year</th>
+							<th style="width: 90px;">Days</th>
+							<th style="width: 140px;">Status</th>
+							<th style="width: 170px;">Submitted</th>
+							<th style="width: 220px;">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="r : ${requests}" class="admin-shift-row">
+							<td class="admin-cell-checkbox">
+								<input type="checkbox" class="vacRowSelect admin-check" name="requestIds" th:value="${r.id}" aria-label="Select vacation request"/>
+							</td>
+							<td th:text="${r.employeeName()}">—</td>
+							<td th:text="${r.year()}">—</td>
+							<td th:text="${r.selectedCount()}">0</td>
+							<td>
+								<span class="admin-status-badge" th:classappend="${'admin-status-' + r.status().toLowerCase()}" th:text="${r.status()}">PENDING</span>
+							</td>
+							<td th:text="${r.submittedAtFormatted()}">—</td>
+							<td>
+								<div class="admin-row-actions">
+									<a th:href="@{/admin/vacation-requests/{id}(id=${r.id})}" class="admin-btn admin-btn-link admin-btn-sm">View</a>
+									<form th:action="@{/admin/vacation-requests/{id}/delete(id=${r.id})}" method="post" style="display:inline;" onsubmit="return confirm('Delete this vacation request? This removes it from the admin list.');">
+										<input th:if="${_csrf != null}" type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+										<button type="submit" class="admin-btn admin-btn-reject admin-btn-sm">Delete</button>
+									</form>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+			<p th:if="${requests == null or requests.isEmpty()}" class="admin-empty">No vacation requests yet.</p>
+		</div>
+		</section>
+	</main>
+
+	<script>
+		(function() {
+			function qs(sel) { return document.querySelector(sel); }
+			function qsa(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+			var selectAll = qs('#vacSelectAll');
+			var rows = function() { return qsa('.vacRowSelect'); };
+			var bulkBar = qs('#vacBulkBar');
+			var selectedCount = qs('#vacSelectedCount');
+			var clearSelectionBtn = qs('#vacClearSelectionBtn');
+
+			function update() {
+				var list = rows();
+				var checked = list.filter(function(x) { return x.checked; }).length;
+				if (selectedCount) selectedCount.textContent = String(checked);
+				if (bulkBar) bulkBar.style.display = checked > 0 ? 'flex' : 'none';
+				list.forEach(function(x) {
+					var tr = x.closest('tr');
+					if (!tr) return;
+					if (x.checked) tr.classList.add('is-selected');
+					else tr.classList.remove('is-selected');
+				});
+				if (selectAll) {
+					selectAll.checked = checked > 0 && checked === list.length;
+					selectAll.indeterminate = checked > 0 && checked < list.length;
+				}
+			}
+
+			if (selectAll) {
+				selectAll.addEventListener('change', function() {
+					rows().forEach(function(x) { x.checked = selectAll.checked; });
+					update();
+				});
+			}
+			if (clearSelectionBtn) {
+				clearSelectionBtn.addEventListener('click', function() {
+					rows().forEach(function(x) { x.checked = false; });
+					if (selectAll) {
+						selectAll.checked = false;
+						selectAll.indeterminate = false;
+					}
+					update();
+				});
+			}
+			rows().forEach(function(x) { x.addEventListener('change', update); });
+			update();
+		})();
+	</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{dashboard/layout :: layout(content=~{::main})}">
+<head>
+	<title>Select Holidays</title>
+	<meta name="_csrf" th:content="${_csrf.token}" content=""/>
+	<meta name="_csrf_header" th:content="${_csrf.headerName}" content="X-CSRF-TOKEN"/>
+</head>
+<body>
+	<main th:fragment="main" class="holidays-page">
+		<div id="holidays-toast-container" class="holidays-toast-container" aria-live="polite"></div>
+
+		<div class="holidays-layout">
+			<div class="holidays-main">
+				<!-- Summary card: compact, progress-driven -->
+				<div class="holidays-summary-card dashboard-card holidays-info-box-vacation" aria-label="Vacation entitlement summary">
+					<div class="holidays-summary-head">
+						<h2 class="holidays-summary-title">Vacation planning</h2>
+						<p class="holidays-summary-desc">Select your annual vacation days below. You must choose exactly your entitlement to submit.</p>
+					</div>
+					<div class="holidays-stats-row">
+						<div class="holidays-stat-item holidays-stat-entitlement">
+							<span class="holidays-stat-icon" aria-hidden="true">◇</span>
+							<div class="holidays-stat-content">
+								<span id="holidays-entitlement-label" class="holidays-stat-label">Entitlement</span>
+								<span id="holidays-entitlement-days" class="holidays-stat-num">—</span>
+								<span class="holidays-stat-unit">days</span>
+							</div>
+						</div>
+						<div class="holidays-stat-item holidays-stat-selected">
+							<span class="holidays-stat-icon" aria-hidden="true">✓</span>
+							<div class="holidays-stat-content">
+								<span id="holidays-selected-label" class="holidays-stat-label">Selected</span>
+								<span class="holidays-stat-num-wrap">
+									<span id="holidays-selected-count">0</span>
+									<span class="holidays-selected-sep">/</span>
+									<span id="holidays-selected-total">—</span>
+								</span>
+								<span class="holidays-stat-unit">days</span>
+							</div>
+						</div>
+						<div class="holidays-stat-item holidays-stat-remaining">
+							<span class="holidays-stat-icon" aria-hidden="true">○</span>
+							<div class="holidays-stat-content">
+								<span id="holidays-remaining-label" class="holidays-stat-label">Remaining</span>
+								<span id="holidays-remaining-days" class="holidays-stat-num">—</span>
+								<span class="holidays-stat-unit">days</span>
+							</div>
+						</div>
+					</div>
+					<div class="holidays-progress-block" aria-label="Vacation selection progress">
+						<p id="holidays-progress-text" class="holidays-progress-text" role="status">0 of 0 vacation days selected</p>
+						<div class="holidays-progress-wrap" aria-hidden="true">
+							<div id="holidays-progress-fill" class="holidays-progress-fill"></div>
+						</div>
+					</div>
+					<div class="holidays-status-badge-wrap">
+						<span id="holidays-status-badge" class="holidays-status-badge holidays-status-badge-draft" aria-label="Request status">Draft</span>
+					</div>
+					<p id="holidays-request-status" class="holidays-request-status" role="status" aria-live="polite"></p>
+					<div class="holidays-submit-wrap">
+						<p id="holidays-submit-helper" class="holidays-submit-helper" role="status"></p>
+						<button type="button" id="btn-submit-vacation" class="btn btn-primary holidays-submit-btn" disabled>Submit vacation request</button>
+					</div>
+				</div>
+
+				<!-- Calendar: dominant, premium container -->
+				<div class="holidays-calendar-card">
+					<div class="holidays-calendar-inner">
+						<div id="holidays-fullcalendar" class="holidays-calendar-size"></div>
+					</div>
+				</div>
+			</div>
+
+			<aside class="holidays-sidebar" aria-label="Vacation request details">
+				<div class="holidays-sidebar-card">
+					<h3 class="holidays-sidebar-title">Admin feedback</h3>
+					<div id="holidays-selected-dates-list" class="holidays-selected-dates-list" role="list"></div>
+					<div id="holidays-selected-dates-empty" class="holidays-selected-dates-empty">
+						<span class="holidays-selected-dates-empty-icon" aria-hidden="true">💬</span>
+						<p class="holidays-selected-dates-empty-text">No admin feedback yet.</p>
+					</div>
+				</div>
+				<div class="holidays-sidebar-card holidays-sidebar-hints">
+					<h3 class="holidays-sidebar-title">Rules</h3>
+					<ul class="holidays-hints-list">
+						<li>Only weekdays (Mon–Sat) can be selected.</li>
+						<li>Past dates and days with a shift are not available.</li>
+						<li>Select exactly your entitlement to submit.</li>
+					</ul>
+				</div>
+			</aside>
+		</div>
+
+		<script th:src="@{/js/holidays.js}" src="../static/js/holidays.js"></script>
+	</main>
+</body>
+</html>

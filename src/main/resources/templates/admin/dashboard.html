@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(content=~{::main})}">
+<head>
+	<title>Admin dashboard</title>
+</head>
+<body>
+	<main th:fragment="main" class="admin-dashboard">
+		<div class="admin-dashboard-grid">
+			<section class="dashboard-card admin-attention-card" aria-label="Needs attention">
+				<div class="admin-card-head">
+					<h2 class="admin-card-title">Needs attention</h2>
+					<p class="admin-card-sub">Pending items waiting for review</p>
+				</div>
+				<div class="admin-attention-row">
+					<div class="admin-attention-item">
+						<span class="admin-attention-label">Vacation requests</span>
+						<span class="admin-attention-value" th:text="${overview != null ? overview.pendingVacationRequests() : 0}">0</span>
+						<span class="admin-attention-chip">Pending</span>
+					</div>
+					<div class="admin-attention-item">
+						<span class="admin-attention-label">Shift plans</span>
+						<span class="admin-attention-value" th:text="${overview != null ? overview.pendingShiftPlans() : 0}">0</span>
+						<span class="admin-attention-chip">Pending</span>
+					</div>
+				</div>
+			</section>
+
+			<section class="dashboard-card admin-workforce-card" aria-label="Workforce status">
+				<div class="admin-workforce-top">
+					<div class="admin-workforce-title-wrap">
+						<span class="admin-live-dot" aria-hidden="true"></span>
+						<h2 class="admin-card-title">Workforce status</h2>
+					</div>
+					<p class="admin-card-sub">Live indicator based on approved shifts</p>
+				</div>
+
+				<div class="admin-workforce-main">
+					<div class="admin-workforce-metric">
+						<span class="admin-workforce-metric-label">Currently active shift</span>
+						<span class="admin-workforce-metric-value" th:text="${overview != null ? overview.activeShiftLabel() : '—'}">Night shift</span>
+					</div>
+					<div class="admin-workforce-metric admin-workforce-metric-strong">
+						<span class="admin-workforce-metric-label">Employees currently working</span>
+						<span class="admin-workforce-metric-value">
+							<span th:text="${overview != null ? overview.activeEmployeesCount() : 0}">0</span>
+							<span class="admin-workforce-metric-suffix">/ <span th:text="${overview != null ? overview.totalEmployeesCount() : 0}">0</span></span>
+						</span>
+					</div>
+				</div>
+
+				<p class="admin-workforce-foot">This is an operational overview. Use the sidebar pages for detailed approvals.</p>
+			</section>
+
+			<section class="dashboard-card admin-inventory-card" aria-label="Inventory Analytics">
+				<div class="admin-card-head">
+					<h2 class="admin-card-title">Inventory Analytics</h2>
+					<p class="admin-card-sub">Upload last year’s incoming goods (.xlsx) to visualize monthly volume.</p>
+				</div>
+
+				<div class="admin-inventory-upload">
+					<input id="inv-xlsx" class="admin-inventory-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/>
+					<button id="inv-clear" type="button" class="btn btn-secondary admin-inventory-clear" disabled>Clear</button>
+				</div>
+				<p class="admin-inventory-hint">
+					Expected columns: a date column (e.g. <span class="admin-pill">date</span>) and a numeric volume column (e.g. <span class="admin-pill">volume</span>/<span class="admin-pill">qty</span>).
+				</p>
+
+				<div id="inv-error" class="admin-inventory-error" role="status" aria-live="polite" hidden></div>
+
+				<div class="admin-inventory-chart-wrap">
+					<canvas id="inv-chart" height="120" aria-label="Inventory volume per month"></canvas>
+				</div>
+			</section>
+
+			<section class="dashboard-card admin-overtime-widget" aria-label="Overtime Requests">
+				<div class="admin-card-head admin-overtime-widget-head">
+					<div>
+						<h2 class="admin-card-title">Overtime Requests</h2>
+						<p class="admin-card-sub">Latest requests and response overview</p>
+					</div>
+					<a th:href="@{/admin/overtime-requests}" class="admin-placeholder-link admin-overtime-widget-link">View all</a>
+				</div>
+
+				<div class="admin-overtime-widget-table-wrap">
+					<table class="admin-table admin-overtime-mini-table" th:if="${overtimeRecent != null and !overtimeRecent.isEmpty()}">
+						<thead>
+						<tr>
+							<th>Title</th>
+							<th style="width: 110px;">Date</th>
+							<th style="width: 120px;">Time</th>
+							<th style="width: 180px;">Responses</th>
+							<th style="width: 110px;">Status</th>
+							<th style="width: 90px;"></th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr th:each="r : ${overtimeRecent}">
+							<td>
+								<div class="admin-overtime-mini-title" th:text="${r.title}">Overtime</div>
+								<div class="admin-overtime-mini-sub" th:text="${r.message != null ? r.message : '—'}">—</div>
+							</td>
+							<td th:text="${r.workDate}">—</td>
+							<td>
+								<span th:text="${r.startTime != null ? r.startTime : '—'}">—</span>
+								<span th:if="${r.endTime != null}">–<span th:text="${r.endTime}">—</span></span>
+							</td>
+							<td>
+								<span class="admin-status-badge admin-status-pending" th:text="|P ${r.pending}|">P 0</span>
+								<span class="admin-status-badge admin-status-approved" th:text="|A ${r.accepted}|">A 0</span>
+								<span class="admin-status-badge admin-status-rejected" th:text="|D ${r.declined}|">D 0</span>
+							</td>
+							<td>
+								<span class="admin-status-badge" th:classappend="${'admin-status-' + r.status.name().toLowerCase()}" th:text="${r.status}">OPEN</span>
+							</td>
+							<td style="text-align:right;">
+								<a class="admin-btn admin-btn-link admin-btn-sm" th:href="@{/admin/overtime-requests/{id}(id=${r.id})}">View</a>
+							</td>
+						</tr>
+						</tbody>
+					</table>
+					<p class="admin-empty" th:if="${overtimeRecent == null or overtimeRecent.isEmpty()}">No overtime requests yet.</p>
+				</div>
+			</section>
+		</div>
+
+		<script th:src="@{/vendor/xlsx.full.min.js}" src="/vendor/xlsx.full.min.js"></script>
+		<script th:src="@{/vendor/chart.umd.min.js}" src="/vendor/chart.umd.min.js"></script>
+		<script>
+		(function() {
+			var fileEl = document.getElementById('inv-xlsx');
+			var clearBtn = document.getElementById('inv-clear');
+			var errEl = document.getElementById('inv-error');
+			var canvas = document.getElementById('inv-chart');
+			if (!fileEl || !clearBtn || !errEl || !canvas) return;
+			function showError(msg) {
+				errEl.textContent = msg || '';
+				errEl.hidden = !msg;
+			}
+			if (typeof XLSX === 'undefined' || typeof Chart === 'undefined') {
+				showError('Inventory chart libraries failed to load. Please check your internet connection or CDN access (SheetJS xlsx + Chart.js).');
+				return;
+			}
+
+			var chart = null;
+			var STORAGE_KEY = 'admin_inventory_analytics_v1';
+
+			function loadCached() {
+				try {
+					var raw = window.localStorage.getItem(STORAGE_KEY);
+					if (!raw) return null;
+					var obj = JSON.parse(raw);
+					if (!obj || !Array.isArray(obj.monthSums) || obj.monthSums.length !== 12) return null;
+					return obj;
+				} catch (e) { return null; }
+			}
+			function saveCached(payload) {
+				try {
+					window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+				} catch (e) { /* ignore */ }
+			}
+			function clearCached() {
+				try { window.localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+			}
+
+			function normalizeKey(s) {
+				return String(s || '').trim().toLowerCase().replace(/\s+/g, '');
+			}
+
+			function parseDate(val) {
+				if (val == null) return null;
+				if (val instanceof Date && !isNaN(val)) return val;
+				if (typeof val === 'number') {
+					// Excel serial date
+					var d = XLSX.SSF.parse_date_code(val);
+					if (!d) return null;
+					// Use local date to avoid UTC month shifting
+					return new Date(d.y, (d.m || 1) - 1, d.d || 1);
+				}
+				var s = String(val).trim();
+				if (!s) return null;
+				var d2 = new Date(s);
+				if (!isNaN(d2)) return d2;
+				// Try dd.mm.yyyy
+				var m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+				if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+				// Try dd/mm/yyyy
+				var m2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+				if (m2) return new Date(Number(m2[3]), Number(m2[2]) - 1, Number(m2[1]));
+				// Try yyyy/mm/dd
+				var m3 = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+				if (m3) return new Date(Number(m3[1]), Number(m3[2]) - 1, Number(m3[3]));
+				return null;
+			}
+
+			function getMonthIndex(d) {
+				return d ? d.getMonth() : null; // 0..11
+			}
+
+			function pickColumns(rows) {
+				if (!rows || !rows.length) return null;
+				var keys = Object.keys(rows[0] || {});
+				var norm = keys.map(function(k) { return normalizeKey(k); });
+
+				function findAny(candidates) {
+					for (var i = 0; i < candidates.length; i++) {
+						var idx = norm.indexOf(normalizeKey(candidates[i]));
+						if (idx !== -1) return keys[idx];
+					}
+					return null;
+				}
+
+				var dateKey = findAny(['date', 'datum', 'day', 'entrydate', 'incomingdate']);
+				var volKey = findAny(['volume', 'qty', 'quantity', 'amount', 'items', 'count', 'units']);
+
+				// Heuristic: if missing, find first date-like and first numeric-like column
+				if (!dateKey) {
+					for (var k = 0; k < keys.length; k++) {
+						var sample = rows.slice(0, 20).map(function(r) { return r[keys[k]]; }).find(function(v) { return v != null && String(v).trim() !== ''; });
+						if (parseDate(sample)) { dateKey = keys[k]; break; }
+					}
+				}
+				if (!volKey) {
+					for (var j = 0; j < keys.length; j++) {
+						var sample2 = rows.slice(0, 20).map(function(r) { return r[keys[j]]; }).find(function(v) { return v != null && String(v).trim() !== ''; });
+						var n = Number(sample2);
+						if (isFinite(n)) { volKey = keys[j]; break; }
+					}
+				}
+				if (!dateKey || !volKey) return null;
+				return { dateKey: dateKey, volKey: volKey };
+			}
+
+			function monthLabels() {
+				return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+			}
+
+			function monthColors() {
+				// Dark-theme friendly palette (distinct, but cohesive).
+				// Peak months (Mar/Dec) get stronger contrast.
+				return [
+					'rgba(167, 139, 250, 0.78)', // Jan (violet)
+					'rgba(129, 140, 248, 0.78)', // Feb (indigo)
+					'rgba(236, 72, 153, 0.92)',  // Mar (peak highlight - pink)
+					'rgba(96, 165, 250, 0.78)',  // Apr (blue)
+					'rgba(45, 212, 191, 0.78)',  // May (teal)
+					'rgba(34, 197, 94, 0.78)',   // Jun (green)
+					'rgba(251, 191, 36, 0.78)',  // Jul (amber)
+					'rgba(249, 115, 22, 0.78)',  // Aug (orange)
+					'rgba(192, 132, 252, 0.78)', // Sep (purple)
+					'rgba(148, 163, 184, 0.72)', // Oct (slate)
+					'rgba(250, 204, 21, 0.84)',  // Nov (gold)
+					'rgba(239, 68, 68, 0.92)'    // Dec (peak highlight - red)
+				];
+			}
+
+			function buildChart(monthSums) {
+				var labels = monthLabels();
+				var colors = monthColors();
+				var data = labels.map(function(_, i) { return Number(monthSums[i] || 0); });
+
+				if (chart) chart.destroy();
+				var ctx = canvas.getContext('2d');
+				chart = new Chart(ctx, {
+					type: 'bar',
+					data: {
+						labels: labels,
+						datasets: [{
+							label: 'Volume',
+							data: data,
+							backgroundColor: colors,
+							borderColor: colors.map(function(c) { return c.replace(/0\.\d+\)$/, '1)'); }),
+							borderWidth: 1,
+							borderRadius: 12,
+							borderSkipped: false,
+							hoverBackgroundColor: colors.map(function(c) { return c.replace(/0\.\d+\)$/, '0.98)'); })
+						}]
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						plugins: {
+							legend: { display: false },
+							tooltip: {
+								backgroundColor: 'rgba(17, 24, 39, 0.96)',
+								borderColor: 'rgba(255,255,255,0.14)',
+								borderWidth: 1,
+								titleColor: 'rgba(255,255,255,0.95)',
+								bodyColor: 'rgba(255,255,255,0.85)'
+							}
+						},
+						scales: {
+							x: {
+								grid: { display: false },
+								ticks: { color: 'rgba(255,255,255,0.78)', font: { weight: 700 } },
+								border: { display: false }
+							},
+							y: {
+								grid: { color: 'rgba(255,255,255,0.10)' },
+								ticks: { color: 'rgba(255,255,255,0.70)', precision: 0 },
+								border: { display: false }
+							}
+						},
+						animation: { duration: 520 }
+					}
+				});
+			}
+
+			function clearAll() {
+				fileEl.value = '';
+				clearBtn.disabled = true;
+				showError('');
+				errEl.style.borderColor = '';
+				errEl.style.background = '';
+				clearCached();
+				if (chart) { chart.destroy(); chart = null; }
+				buildChart(new Array(12).fill(0));
+			}
+
+			clearBtn.addEventListener('click', clearAll);
+
+			// initial chart: restore from cache if available
+			var cached = loadCached();
+			if (cached) {
+				buildChart(cached.monthSums);
+				clearBtn.disabled = false;
+				if (cached.summary) {
+					showError(cached.summary);
+					errEl.style.borderColor = 'rgba(34, 197, 94, 0.22)';
+					errEl.style.background = 'rgba(34, 197, 94, 0.08)';
+				}
+			} else {
+				buildChart(new Array(12).fill(0));
+			}
+
+			fileEl.addEventListener('change', function() {
+				showError('');
+				var file = fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
+				if (!file) return;
+				if (!/\.xlsx$/i.test(file.name || '')) {
+					showError('Please upload a .xlsx file.');
+					return;
+				}
+
+				var reader = new FileReader();
+				reader.onload = function(e) {
+					try {
+						var data = new Uint8Array(e.target.result);
+						var wb = XLSX.read(data, { type: 'array' });
+						var sheetName = wb.SheetNames && wb.SheetNames[0];
+						if (!sheetName) throw new Error('No sheets found.');
+						var ws = wb.Sheets[sheetName];
+						var rows = XLSX.utils.sheet_to_json(ws, { defval: null, raw: true });
+						if (!rows || !rows.length) throw new Error('The sheet is empty.');
+
+						var cols = pickColumns(rows);
+						if (!cols) throw new Error('Could not detect date + volume columns. Rename columns to Date + Volume (or Qty).');
+
+						var monthSums = new Array(12).fill(0);
+						var used = 0;
+						var tried = 0;
+
+						rows.forEach(function(r) {
+							tried++;
+							var d = parseDate(r[cols.dateKey]);
+							var n = Number(r[cols.volKey]);
+							if (!d || !isFinite(n)) return;
+							var mi = getMonthIndex(d);
+							if (mi == null) return;
+							monthSums[mi] += n;
+							used++;
+						});
+
+						if (used === 0) throw new Error('No valid rows found. Ensure your date and volume columns contain valid values.');
+
+						// Helpful debug in error box (non-error style is handled by CSS already)
+						var summary = 'Detected columns: ' + cols.dateKey + ' (date), ' + cols.volKey + ' (volume). Parsed ' + used + ' / ' + tried + ' rows.';
+						showError(summary);
+						errEl.style.borderColor = 'rgba(34, 197, 94, 0.22)';
+						errEl.style.background = 'rgba(34, 197, 94, 0.08)';
+
+						buildChart(monthSums);
+						clearBtn.disabled = false;
+						saveCached({
+							monthSums: monthSums,
+							summary: summary,
+							filename: file.name || null,
+							savedAt: new Date().toISOString()
+						});
+					} catch (err) {
+						errEl.style.borderColor = '';
+						errEl.style.background = '';
+						showError(String(err && err.message ? err.message : err));
+					}
+				};
+				reader.onerror = function() {
+					showError('Failed to read file.');
+				};
+				reader.readAsArrayBuffer(file);
+			});
+		})();
+		</script>
+	</main>
+</body>
+</html>
